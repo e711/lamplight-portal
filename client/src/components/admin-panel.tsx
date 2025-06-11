@@ -1,0 +1,556 @@
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { 
+  X, 
+  Building, 
+  Grid3X3, 
+  Images, 
+  Settings, 
+  Save, 
+  Plus, 
+  Edit, 
+  Trash2,
+  ProjectorIcon
+} from "lucide-react";
+import type { Company, Platform } from "@shared/schema";
+import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
+
+interface AdminPanelProps {
+  company?: Company;
+  platforms: Platform[];
+  onClose: () => void;
+}
+
+type AdminSection = "company" | "platforms" | "media" | "settings";
+
+const companyFormSchema = insertCompanySchema.extend({
+  id: z.number().optional(),
+});
+
+const platformFormSchema = insertPlatformSchema;
+
+export default function AdminPanel({ company, platforms, onClose }: AdminPanelProps) {
+  const [activeSection, setActiveSection] = useState<AdminSection>("company");
+  const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
+  const [showPlatformForm, setShowPlatformForm] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Company form
+  const companyForm = useForm<z.infer<typeof companyFormSchema>>({
+    resolver: zodResolver(companyFormSchema),
+    defaultValues: {
+      name: company?.name || "",
+      heroTitle: company?.heroTitle || "",
+      heroDescription: company?.heroDescription || "",
+      aboutTitle: company?.aboutTitle || "",
+      aboutDescription: company?.aboutDescription || "",
+      contactEmail: company?.contactEmail || "",
+      siteTitle: company?.siteTitle || "",
+      maintenanceMode: company?.maintenanceMode || false,
+    },
+  });
+
+  // Platform form
+  const platformForm = useForm<z.infer<typeof platformFormSchema>>({
+    resolver: zodResolver(platformFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      category: "",
+      link: "",
+      logo: "",
+      isActive: true,
+      sortOrder: 0,
+    },
+  });
+
+  // Update company mutation
+  const updateCompanyMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof companyFormSchema>) => {
+      const response = await apiRequest("PUT", `/api/company/${company?.id || 1}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/company"] });
+      toast({
+        title: "Success",
+        description: "Company information updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update company information",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create platform mutation
+  const createPlatformMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof platformFormSchema>) => {
+      const response = await apiRequest("POST", "/api/platforms", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({
+        title: "Success",
+        description: "Platform created successfully",
+      });
+      setShowPlatformForm(false);
+      platformForm.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create platform",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update platform mutation
+  const updatePlatformMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof platformFormSchema> }) => {
+      const response = await apiRequest("PUT", `/api/platforms/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({
+        title: "Success",
+        description: "Platform updated successfully",
+      });
+      setEditingPlatform(null);
+      platformForm.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update platform",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete platform mutation
+  const deletePlatformMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/platforms/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      toast({
+        title: "Success",
+        description: "Platform deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete platform",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onCompanySubmit = (data: z.infer<typeof companyFormSchema>) => {
+    updateCompanyMutation.mutate(data);
+  };
+
+  const onPlatformSubmit = (data: z.infer<typeof platformFormSchema>) => {
+    if (editingPlatform) {
+      updatePlatformMutation.mutate({ id: editingPlatform.id, data });
+    } else {
+      createPlatformMutation.mutate(data);
+    }
+  };
+
+  const handleEditPlatform = (platform: Platform) => {
+    setEditingPlatform(platform);
+    platformForm.reset({
+      name: platform.name,
+      description: platform.description,
+      category: platform.category,
+      link: platform.link,
+      logo: platform.logo || "",
+      isActive: platform.isActive,
+      sortOrder: platform.sortOrder,
+    });
+    setShowPlatformForm(true);
+  };
+
+  const handleAddPlatform = () => {
+    setEditingPlatform(null);
+    platformForm.reset({
+      name: "",
+      description: "",
+      category: "",
+      link: "",
+      logo: "",
+      isActive: true,
+      sortOrder: platforms.length + 1,
+    });
+    setShowPlatformForm(true);
+  };
+
+  const navItems = [
+    { id: "company" as AdminSection, label: "Company Info", icon: Building },
+    { id: "platforms" as AdminSection, label: "Manage Platforms", icon: Grid3X3 },
+    { id: "media" as AdminSection, label: "Media Library", icon: Images },
+    { id: "settings" as AdminSection, label: "Settings", icon: Settings },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+          <h2 className="text-2xl font-bold text-dawn-primary flex items-center">
+            <Settings className="h-6 w-6 mr-2" />
+            Dawn Software Group - Admin Panel
+          </h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="flex h-[calc(90vh-5rem)]">
+          {/* Sidebar */}
+          <div className="w-64 bg-slate-50 p-6 border-r border-slate-200">
+            <nav className="space-y-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.id}
+                    variant={activeSection === item.id ? "default" : "ghost"}
+                    className={`w-full justify-start ${
+                      activeSection === item.id 
+                        ? "bg-dawn-accent text-white" 
+                        : "text-slate-600 hover:bg-slate-200"
+                    }`}
+                    onClick={() => setActiveSection(item.id)}
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {item.label}
+                  </Button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 p-6 overflow-y-auto">
+            {activeSection === "company" && (
+              <div>
+                <h3 className="text-xl font-semibold text-dawn-primary mb-6">Company Information</h3>
+                <Form {...companyForm}>
+                  <form onSubmit={companyForm.handleSubmit(onCompanySubmit)} className="space-y-6">
+                    <FormField
+                      control={companyForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="heroTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hero Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="heroDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hero Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} rows={3} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="aboutTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>About Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="aboutDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>About Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} rows={4} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      className="bg-dawn-accent hover:bg-blue-600 text-white"
+                      disabled={updateCompanyMutation.isPending}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {updateCompanyMutation.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </form>
+                </Form>
+              </div>
+            )}
+
+            {activeSection === "platforms" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-dawn-primary">Manage Platforms</h3>
+                  <Button 
+                    onClick={handleAddPlatform}
+                    className="bg-dawn-success hover:bg-emerald-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Platform
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {platforms.map((platform) => (
+                    <Card key={platform.id} className="bg-slate-50 border border-slate-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <ProjectorIcon className="h-6 w-6 text-dawn-accent" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-dawn-primary">{platform.name}</h4>
+                              <p className="text-sm text-slate-600">{platform.category}</p>
+                              <Badge variant={platform.isActive ? "default" : "secondary"}>
+                                {platform.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditPlatform(platform)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => deletePlatformMutation.mutate(platform.id)}
+                              disabled={deletePlatformMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeSection === "media" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-dawn-primary">Media Library</h3>
+                  <Button className="bg-dawn-success hover:bg-emerald-600 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Upload Media
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-100 rounded-lg p-4 text-center">
+                    <Images className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                    <p className="text-sm text-slate-600">No media files</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "settings" && (
+              <div>
+                <h3 className="text-xl font-semibold text-dawn-primary mb-6">System Settings</h3>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Site Title</label>
+                    <Input defaultValue={company?.siteTitle || "Dawn Software Group"} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Contact Email</label>
+                    <Input type="email" defaultValue={company?.contactEmail || "contact@dawnsoftware.com"} />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="maintenance" defaultChecked={company?.maintenanceMode || false} />
+                    <label htmlFor="maintenance" className="text-sm text-slate-700">Maintenance Mode</label>
+                  </div>
+                  <Button className="bg-dawn-accent hover:bg-blue-600 text-white">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Settings
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Platform Form Dialog */}
+      <Dialog open={showPlatformForm} onOpenChange={setShowPlatformForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPlatform ? "Edit Platform" : "Add Platform"}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...platformForm}>
+            <form onSubmit={platformForm.handleSubmit(onPlatformSubmit)} className="space-y-4">
+              <FormField
+                control={platformForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={platformForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={platformForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={platformForm.control}
+                name="link"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform Link</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="url" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={platformForm.control}
+                name="logo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo URL</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="url" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={platformForm.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Switch 
+                        checked={field.value} 
+                        onCheckedChange={field.onChange} 
+                      />
+                    </FormControl>
+                    <FormLabel>Active</FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowPlatformForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-dawn-accent hover:bg-blue-600 text-white"
+                  disabled={createPlatformMutation.isPending || updatePlatformMutation.isPending}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {editingPlatform ? "Update" : "Create"} Platform
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
