@@ -50,6 +50,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
   const [showPlatformForm, setShowPlatformForm] = useState(false);
   const [showUrlImport, setShowUrlImport] = useState(false);
   const [importUrl, setImportUrl] = useState("");
+  const [logoPreviewError, setLogoPreviewError] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -334,22 +335,62 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                       name="logo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company Logo URL</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="https://example.com/logo.png" />
-                          </FormControl>
+                          <FormLabel>Company Logo</FormLabel>
+                          <div className="space-y-2">
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                placeholder="https://example.com/logo.png"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setLogoPreviewError(false);
+                                }}
+                              />
+                            </FormControl>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-slate-500">or</span>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (file.size > 5000000) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Image must be less than 5MB",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      field.onChange(reader.result as string);
+                                      setLogoPreviewError(false);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                className="flex-1"
+                                data-testid="input-logo-upload"
+                              />
+                            </div>
+                          </div>
                           <FormMessage />
-                          {field.value && (
+                          {field.value && !logoPreviewError && (
                             <div className="mt-2">
                               <img 
                                 src={field.value} 
                                 alt="Logo preview" 
                                 className="h-16 w-auto object-contain border border-slate-200 rounded p-2"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
+                                onError={() => setLogoPreviewError(true)}
                               />
                             </div>
+                          )}
+                          {logoPreviewError && field.value && (
+                            <p className="text-sm text-red-500 mt-2">
+                              Unable to load image. Please check the URL or upload a valid image file.
+                            </p>
                           )}
                         </FormItem>
                       )}

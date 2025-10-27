@@ -161,7 +161,14 @@ export class MemStorage implements IStorage {
 
   async createCompany(insertCompany: InsertCompany): Promise<Company> {
     const id = this.currentCompanyId++;
-    const company: Company = { ...insertCompany, id };
+    const company: Company = { 
+      ...insertCompany,
+      logo: insertCompany.logo ?? null,
+      contactEmail: insertCompany.contactEmail ?? null,
+      siteTitle: insertCompany.siteTitle ?? null,
+      maintenanceMode: insertCompany.maintenanceMode ?? null,
+      id 
+    };
     this.companies.set(id, company);
     return company;
   }
