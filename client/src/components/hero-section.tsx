@@ -22,7 +22,7 @@ export default function HeroSection({ company }: HeroSectionProps) {
   };
 
   return (
-    <section id="home" className="bg-gradient-to-br from-dawn-primary to-dawn-secondary text-white py-20">
+    <section id="home" className="bg-gradient-to-br from-lamplight-primary to-lamplight-secondary text-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -39,7 +39,7 @@ export default function HeroSection({ company }: HeroSectionProps) {
             )}
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
-            {company?.heroDescription || "Dawn Software Group is a leading holding company specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy."}
+            {company?.heroDescription || "Lamplight Technology is a leading holding company specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 

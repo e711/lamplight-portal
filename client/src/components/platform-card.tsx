@@ -30,7 +30,7 @@ export default function PlatformCard({ platform }: PlatformCardProps) {
             className="w-full h-48 object-cover rounded-lg mb-4" 
           />
         )}
-        <h3 className="text-xl font-semibold text-dawn-primary mb-2">{platform.name}</h3>
+        <h3 className="text-xl font-semibold text-lamplight-primary mb-2">{platform.name}</h3>
         <p className="text-slate-600 mb-4">{platform.description}</p>
         <div className="flex items-center justify-between">
           <Badge className={getCategoryColor(platform.category)}>
@@ -40,7 +40,7 @@ export default function PlatformCard({ platform }: PlatformCardProps) {
             href={platform.link} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-dawn-accent hover:text-blue-600 font-medium flex items-center"
+            className="text-lamplight-accent hover:text-blue-600 font-medium flex items-center"
           >
             Launch Platform 
             <ExternalLink className="h-4 w-4 ml-1" />

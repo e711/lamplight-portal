@@ -221,9 +221,9 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-2xl font-bold text-dawn-primary flex items-center">
+          <h2 className="text-2xl font-bold text-lamplight-primary flex items-center">
             <Settings className="h-6 w-6 mr-2" />
-            Dawn Software Group - Admin Panel
+            Lamplight Technology - Admin Panel
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -242,7 +242,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                     variant={activeSection === item.id ? "default" : "ghost"}
                     className={`w-full justify-start ${
                       activeSection === item.id 
-                        ? "bg-dawn-accent text-white" 
+                        ? "bg-lamplight-accent text-white" 
                         : "text-slate-600 hover:bg-slate-200"
                     }`}
                     onClick={() => setActiveSection(item.id)}
@@ -259,7 +259,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
           <div className="flex-1 p-6 overflow-y-auto">
             {activeSection === "company" && (
               <div>
-                <h3 className="text-xl font-semibold text-dawn-primary mb-6">Company Information</h3>
+                <h3 className="text-xl font-semibold text-lamplight-primary mb-6">Company Information</h3>
                 <Form {...companyForm}>
                   <form onSubmit={companyForm.handleSubmit(onCompanySubmit)} className="space-y-6">
                     <FormField
@@ -329,7 +329,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                     />
                     <Button 
                       type="submit" 
-                      className="bg-dawn-accent hover:bg-blue-600 text-white"
+                      className="bg-lamplight-accent hover:bg-blue-600 text-white"
                       disabled={updateCompanyMutation.isPending}
                     >
                       <Save className="h-4 w-4 mr-2" />
@@ -343,10 +343,10 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
             {activeSection === "platforms" && (
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-dawn-primary">Manage Platforms</h3>
+                  <h3 className="text-xl font-semibold text-lamplight-primary">Manage Platforms</h3>
                   <Button 
                     onClick={handleAddPlatform}
-                    className="bg-dawn-success hover:bg-emerald-600 text-white"
+                    className="bg-lamplight-success hover:bg-emerald-600 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Platform
@@ -359,10 +359,10 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <ProjectorIcon className="h-6 w-6 text-dawn-accent" />
+                              <ProjectorIcon className="h-6 w-6 text-lamplight-accent" />
                             </div>
                             <div>
-                              <h4 className="font-semibold text-dawn-primary">{platform.name}</h4>
+                              <h4 className="font-semibold text-lamplight-primary">{platform.name}</h4>
                               <p className="text-sm text-slate-600">{platform.category}</p>
                               <Badge variant={platform.isActive ? "default" : "secondary"}>
                                 {platform.isActive ? "Active" : "Inactive"}
@@ -397,8 +397,8 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
             {activeSection === "media" && (
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-dawn-primary">Media Library</h3>
-                  <Button className="bg-dawn-success hover:bg-emerald-600 text-white">
+                  <h3 className="text-xl font-semibold text-lamplight-primary">Media Library</h3>
+                  <Button className="bg-lamplight-success hover:bg-emerald-600 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Upload Media
                   </Button>
@@ -414,21 +414,21 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
 
             {activeSection === "settings" && (
               <div>
-                <h3 className="text-xl font-semibold text-dawn-primary mb-6">System Settings</h3>
+                <h3 className="text-xl font-semibold text-lamplight-primary mb-6">System Settings</h3>
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Site Title</label>
-                    <Input defaultValue={company?.siteTitle || "Dawn Software Group"} />
+                    <Input defaultValue={company?.siteTitle || "Lamplight Technology"} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Contact Email</label>
-                    <Input type="email" defaultValue={company?.contactEmail || "contact@dawnsoftware.com"} />
+                    <Input type="email" defaultValue={company?.contactEmail || "contact@lamplighttech.com"} />
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch id="maintenance" defaultChecked={company?.maintenanceMode || false} />
                     <label htmlFor="maintenance" className="text-sm text-slate-700">Maintenance Mode</label>
                   </div>
-                  <Button className="bg-dawn-accent hover:bg-blue-600 text-white">
+                  <Button className="bg-lamplight-accent hover:bg-blue-600 text-white">
                     <Save className="h-4 w-4 mr-2" />
                     Save Settings
                   </Button>
@@ -540,7 +540,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-dawn-accent hover:bg-blue-600 text-white"
+                  className="bg-lamplight-accent hover:bg-blue-600 text-white"
                   disabled={createPlatformMutation.isPending || updatePlatformMutation.isPending}
                 >
                   <Save className="h-4 w-4 mr-2" />

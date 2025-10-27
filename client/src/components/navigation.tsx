@@ -22,38 +22,38 @@ export default function Navigation({ onAdminClick }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-dawn-primary">Dawn Software Group</h1>
+            <h1 className="text-2xl font-bold text-lamplight-primary">Lamplight Technology</h1>
           </div>
           
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               <button 
                 onClick={() => scrollToSection('home')}
-                className="text-dawn-primary hover:text-dawn-accent px-3 py-2 text-sm font-medium transition-colors"
+                className="text-lamplight-primary hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
               >
                 Home
               </button>
               <button 
                 onClick={() => scrollToSection('platforms')}
-                className="text-slate-500 hover:text-dawn-accent px-3 py-2 text-sm font-medium transition-colors"
+                className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
               >
                 Platforms
               </button>
               <button 
                 onClick={() => scrollToSection('about')}
-                className="text-slate-500 hover:text-dawn-accent px-3 py-2 text-sm font-medium transition-colors"
+                className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
               >
                 About
               </button>
               <button 
                 onClick={() => scrollToSection('contact')}
-                className="text-slate-500 hover:text-dawn-accent px-3 py-2 text-sm font-medium transition-colors"
+                className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
               >
                 Contact
               </button>
               <Button 
                 onClick={onAdminClick}
-                className="bg-dawn-accent text-white hover:bg-blue-600"
+                className="bg-lamplight-accent text-white hover:bg-blue-600"
                 size="sm"
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -79,31 +79,31 @@ export default function Navigation({ onAdminClick }: NavigationProps) {
             <div className="flex flex-col space-y-2">
               <button 
                 onClick={() => scrollToSection('home')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-dawn-accent"
+                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
               >
                 Home
               </button>
               <button 
                 onClick={() => scrollToSection('platforms')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-dawn-accent"
+                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
               >
                 Platforms
               </button>
               <button 
                 onClick={() => scrollToSection('about')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-dawn-accent"
+                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
               >
                 About
               </button>
               <button 
                 onClick={() => scrollToSection('contact')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-dawn-accent"
+                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
               >
                 Contact
               </button>
               <Button 
                 onClick={onAdminClick}
-                className="bg-dawn-accent text-white hover:bg-blue-600 mx-3"
+                className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
                 size="sm"
               >
                 <Settings className="h-4 w-4 mr-2" />

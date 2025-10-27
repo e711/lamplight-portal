@@ -23,7 +23,7 @@ export default function Home() {
   if (companyLoading || platformsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-dawn-accent"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-lamplight-accent"></div>
       </div>
     );
   }
@@ -39,7 +39,7 @@ export default function Home() {
         <section id="about" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-dawn-primary mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-lamplight-primary mb-4">
                 {company?.aboutTitle || "Building the Future of Software"}
               </h2>
               <p className="text-lg text-slate-600 max-w-3xl mx-auto">
@@ -50,23 +50,23 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ChartLine className="h-8 w-8 text-dawn-accent" />
+                  <ChartLine className="h-8 w-8 text-lamplight-accent" />
                 </div>
-                <h3 className="text-xl font-semibold text-dawn-primary mb-2">Growth Focused</h3>
+                <h3 className="text-xl font-semibold text-lamplight-primary mb-2">Growth Focused</h3>
                 <p className="text-slate-600">Accelerating business growth through innovative technology solutions</p>
               </div>
               <div className="text-center">
                 <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-dawn-success" />
+                  <Shield className="h-8 w-8 text-lamplight-success" />
                 </div>
-                <h3 className="text-xl font-semibold text-dawn-primary mb-2">Enterprise Security</h3>
+                <h3 className="text-xl font-semibold text-lamplight-primary mb-2">Enterprise Security</h3>
                 <p className="text-slate-600">Bank-level security and compliance across all our platforms</p>
               </div>
               <div className="text-center">
                 <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="h-8 w-8 text-purple-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-dawn-primary mb-2">Customer Success</h3>
+                <h3 className="text-xl font-semibold text-lamplight-primary mb-2">Customer Success</h3>
                 <p className="text-slate-600">Dedicated support and success teams for every platform</p>
               </div>
             </div>
@@ -77,7 +77,7 @@ export default function Home() {
         <section id="platforms" className="py-16 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-dawn-primary mb-4">Our SaaS Platforms</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-lamplight-primary mb-4">Our SaaS Platforms</h2>
               <p className="text-lg text-slate-600">Discover our comprehensive suite of business software solutions</p>
             </div>
 
@@ -93,13 +93,13 @@ export default function Home() {
         <section id="contact" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-dawn-primary mb-4">Get in Touch</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-lamplight-primary mb-4">Get in Touch</h2>
               <p className="text-lg text-slate-600 mb-8">Ready to transform your business with our SaaS platforms?</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button className="bg-dawn-accent hover:bg-blue-600 text-white px-8 py-3">
+                <Button className="bg-lamplight-accent hover:bg-blue-600 text-white px-8 py-3">
                   Contact Sales
                 </Button>
-                <Button variant="outline" className="border-dawn-accent text-dawn-accent hover:bg-dawn-accent hover:text-white px-8 py-3">
+                <Button variant="outline" className="border-lamplight-accent text-lamplight-accent hover:bg-lamplight-accent hover:text-white px-8 py-3">
                   Schedule Demo
                 </Button>
               </div>

@@ -24,11 +24,11 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
   
-  /* Dawn Software Group Custom Colors */
-  --dawn-primary: hsl(220, 66.7%, 10.4%);
-  --dawn-secondary: hsl(215, 25.9%, 15.3%);
-  --dawn-accent: hsl(207, 90%, 54%);
-  --dawn-success: hsl(158, 64.4%, 51.6%);
+  /* Lamplight Technology Custom Colors */
+  --lamplight-primary: hsl(220, 66.7%, 10.4%);
+  --lamplight-secondary: hsl(215, 25.9%, 15.3%);
+  --lamplight-accent: hsl(207, 90%, 54%);
+  --lamplight-success: hsl(158, 64.4%, 51.6%);
 }
 
 .dark {
@@ -65,47 +65,47 @@
 }
 
 @layer utilities {
-  .text-dawn-primary {
-    color: var(--dawn-primary);
+  .text-lamplight-primary {
+    color: var(--lamplight-primary);
   }
   
-  .text-dawn-secondary {
-    color: var(--dawn-secondary);
+  .text-lamplight-secondary {
+    color: var(--lamplight-secondary);
   }
   
-  .text-dawn-accent {
-    color: var(--dawn-accent);
+  .text-lamplight-accent {
+    color: var(--lamplight-accent);
   }
   
-  .text-dawn-success {
-    color: var(--dawn-success);
+  .text-lamplight-success {
+    color: var(--lamplight-success);
   }
   
-  .bg-dawn-primary {
-    background-color: var(--dawn-primary);
+  .bg-lamplight-primary {
+    background-color: var(--lamplight-primary);
   }
   
-  .bg-dawn-secondary {
-    background-color: var(--dawn-secondary);
+  .bg-lamplight-secondary {
+    background-color: var(--lamplight-secondary);
   }
   
-  .bg-dawn-accent {
-    background-color: var(--dawn-accent);
+  .bg-lamplight-accent {
+    background-color: var(--lamplight-accent);
   }
   
-  .bg-dawn-success {
-    background-color: var(--dawn-success);
+  .bg-lamplight-success {
+    background-color: var(--lamplight-success);
   }
   
-  .border-dawn-accent {
-    border-color: var(--dawn-accent);
+  .border-lamplight-accent {
+    border-color: var(--lamplight-accent);
   }
   
-  .hover\:bg-dawn-accent:hover {
-    background-color: var(--dawn-accent);
+  .hover\:bg-lamplight-accent:hover {
+    background-color: var(--lamplight-accent);
   }
   
-  .hover\:text-dawn-accent:hover {
-    color: var(--dawn-accent);
+  .hover\:text-lamplight-accent:hover {
+    color: var(--lamplight-accent);
   }
 }
