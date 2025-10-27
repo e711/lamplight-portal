@@ -1,15 +1,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, Menu } from "lucide-react";
+import { Settings, Menu, LogIn, LogOut, User } from "lucide-react";
 import type { Company } from "@shared/schema";
 
 interface NavigationProps {
   onAdminClick: () => void;
   company?: Company;
+  isAuthenticated?: boolean;
 }
 
-export default function Navigation({ onAdminClick, company }: NavigationProps) {
+export default function Navigation({ onAdminClick, company, isAuthenticated = false }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleLogin = () => {
+    window.location.href = '/api/login';
+  };
+
+  const handleLogout = () => {
+    window.location.href = '/api/logout';
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -64,14 +73,38 @@ export default function Navigation({ onAdminClick, company }: NavigationProps) {
               >
                 Contact
               </button>
-              <Button 
-                onClick={onAdminClick}
-                className="bg-lamplight-accent text-white hover:bg-blue-600"
-                size="sm"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button 
+                    onClick={onAdminClick}
+                    className="bg-lamplight-accent text-white hover:bg-blue-600"
+                    size="sm"
+                    data-testid="button-admin"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                  <Button 
+                    onClick={handleLogout}
+                    variant="outline"
+                    size="sm"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={handleLogin}
+                  className="bg-lamplight-accent text-white hover:bg-blue-600"
+                  size="sm"
+                  data-testid="button-login"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              )}
             </div>
           </div>
           
@@ -114,14 +147,36 @@ export default function Navigation({ onAdminClick, company }: NavigationProps) {
               >
                 Contact
               </button>
-              <Button 
-                onClick={onAdminClick}
-                className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
-                size="sm"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button 
+                    onClick={onAdminClick}
+                    className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
+                    size="sm"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                  <Button 
+                    onClick={handleLogout}
+                    variant="outline"
+                    className="mx-3"
+                    size="sm"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={handleLogin}
+                  className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
+                  size="sm"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              )}
             </div>
           </div>
         )}

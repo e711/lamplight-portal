@@ -52,9 +52,30 @@ Preferred communication style: Simple, everyday language.
 
 ## Authentication and Authorization
 
-**Current State**: The schema includes a users table with username and password fields, but authentication is not fully implemented in the visible codebase.
+**Auth0 Integration**: The application uses Auth0 for authentication with the following configuration:
+- Backend: `express-openid-connect` middleware handles OpenID Connect authentication
+- Frontend: `@auth0/auth0-react` SDK provides React hooks and components
+- Session Management: Auth0 manages sessions with automatic token refresh
+- Protected Routes: Admin endpoints require authentication via custom `requiresAuth()` middleware
 
-**Session Management**: The application includes `connect-pg-simple` as a dependency, suggesting PostgreSQL-backed session storage is intended or partially implemented.
+**Authentication Flow**:
+1. User clicks "Login" button in navigation
+2. Redirected to Auth0 login page (supports Google, GitHub, email/password, etc.)
+3. After successful login, redirected back to application via `/callback`
+4. Auth0 session persisted in browser localStorage with refresh tokens
+5. Authenticated users see Admin and Logout buttons instead of Login
+6. Admin panel and modification endpoints only accessible when authenticated
+
+**Protected Endpoints**:
+- `PUT /api/company/:id` - Update company information
+- `POST /api/platforms` - Create new platform
+- `PUT /api/platforms/:id` - Update platform
+- `DELETE /api/platforms/:id` - Delete platform
+- `POST /api/platforms/extract-from-url` - Extract platform data from URL
+
+**Public Endpoints**:
+- `GET /api/company` - View company information
+- `GET /api/platforms` - View active platforms
 
 ## External Dependencies
 

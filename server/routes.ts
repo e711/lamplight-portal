@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
@@ -7,8 +7,26 @@ import OpenAI from "openai";
 import * as cheerio from "cheerio";
 import { promises as dns } from "dns";
 
+const requiresAuth = () => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.oidc?.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    next();
+  };
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Company routes
+  // Auth routes
+  app.get("/api/user", (req: Request, res: Response) => {
+    if (req.oidc?.isAuthenticated()) {
+      res.json({ user: req.oidc.user });
+    } else {
+      res.json({ user: null });
+    }
+  });
+
+  // Company routes (protected)
   app.get("/api/company", async (req, res) => {
     try {
       const company = await storage.getCompany();
@@ -21,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/company/:id", async (req, res) => {
+  app.put("/api/company/:id", requiresAuth(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertCompanySchema.partial().parse(req.body);
@@ -65,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/platforms", async (req, res) => {
+  app.post("/api/platforms", requiresAuth(), async (req, res) => {
     try {
       const platformData = insertPlatformSchema.parse(req.body);
       const newPlatform = await storage.createPlatform(platformData);
@@ -78,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/platforms/:id", async (req, res) => {
+  app.put("/api/platforms/:id", requiresAuth(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertPlatformSchema.partial().parse(req.body);
@@ -97,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/platforms/:id", async (req, res) => {
+  app.delete("/api/platforms/:id", requiresAuth(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deletePlatform(id);
@@ -112,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/platforms/extract-from-url", async (req, res) => {
+  app.post("/api/platforms/extract-from-url", requiresAuth(), async (req, res) => {
     try {
       const { url } = req.body;
       

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
@@ -20,7 +20,19 @@ export default function Home() {
     queryKey: ["/api/platforms"],
   });
 
-  if (companyLoading || platformsLoading) {
+  const { data: authData, isLoading: authLoading } = useQuery<{ user: any | null }>({
+    queryKey: ["/api/user"],
+  });
+
+  const isAuthenticated = authData?.user !== null && authData?.user !== undefined;
+
+  useEffect(() => {
+    if (!isAuthenticated && showAdmin) {
+      setShowAdmin(false);
+    }
+  }, [isAuthenticated, showAdmin]);
+
+  if (companyLoading || platformsLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-lamplight-accent"></div>
@@ -28,9 +40,15 @@ export default function Home() {
     );
   }
 
+  const handleAdminClick = () => {
+    if (isAuthenticated) {
+      setShowAdmin(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navigation onAdminClick={() => setShowAdmin(true)} company={company} />
+      <Navigation onAdminClick={handleAdminClick} company={company} isAuthenticated={isAuthenticated} />
       
       <main>
         <HeroSection company={company} />
@@ -108,7 +126,7 @@ export default function Home() {
         </section>
       </main>
 
-      {showAdmin && (
+      {showAdmin && isAuthenticated && (
         <AdminPanel 
           company={company} 
           platforms={platforms} 
