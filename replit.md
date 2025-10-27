@@ -1,0 +1,95 @@
+# Overview
+
+This is a full-stack web application built as a holding company portfolio site for "Lamplight Technology." The application showcases multiple SaaS platforms with administrative capabilities to manage company information and platform listings. It uses a modern React frontend with a Node.js/Express backend, Drizzle ORM for database operations, and shadcn/ui components for the interface.
+
+# User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+# System Architecture
+
+## Frontend Architecture
+
+**Technology Stack**: React with TypeScript, Vite as the build tool, and TanStack Query for server state management.
+
+**UI Component System**: The application uses shadcn/ui components built on Radix UI primitives with Tailwind CSS for styling. This provides a comprehensive set of accessible, customizable components following the "New York" style variant.
+
+**Routing**: Client-side routing is handled by Wouter, a minimal routing library. The application currently has two routes: home page and a 404 not-found page.
+
+**State Management**: Server state is managed through TanStack Query with custom query functions defined in `lib/queryClient.ts`. The query client is configured with infinite stale time and disabled refetching to optimize performance.
+
+**Styling Approach**: The application uses Tailwind CSS with a custom configuration that includes CSS variables for theming. Custom color schemes are defined for both light and dark modes, with specific "Lamplight" branded colors for primary UI elements.
+
+## Backend Architecture
+
+**Framework**: Express.js server with TypeScript, using ES modules throughout the application.
+
+**Development vs Production**: The application uses Vite's middleware mode in development for hot module replacement and serves static files in production. This is configured in `server/vite.ts`.
+
+**API Structure**: RESTful API endpoints are registered in `server/routes.ts` with the following patterns:
+- `/api/company` - GET and PUT operations for company data
+- `/api/platforms` - CRUD operations for platform management
+- Input validation using Zod schemas from the shared schema definitions
+
+**Request Logging**: Custom middleware logs API requests with method, path, status code, duration, and truncated response data (max 80 characters).
+
+**Error Handling**: Centralized error handling middleware catches errors and returns appropriate status codes and messages.
+
+## Data Storage Solutions
+
+**ORM**: Drizzle ORM is used for type-safe database operations with PostgreSQL dialect configuration.
+
+**Database Provider**: Neon serverless PostgreSQL (indicated by `@neondatabase/serverless` dependency).
+
+**Schema Design**: Three main tables defined in `shared/schema.ts`:
+- `companies` - Stores company information including hero content, about sections, contact details, and maintenance mode flag
+- `platforms` - Manages SaaS platform listings with name, description, category, link, logo, active status, and sort order
+- `users` - Basic user authentication with username and password fields
+
+**Storage Abstraction**: The application uses a storage interface (`IStorage`) with an in-memory implementation (`MemStorage`) for development/testing. This allows for easy swapping between in-memory and database-backed storage.
+
+**Data Validation**: Drizzle-Zod generates Zod schemas from the database schema for runtime validation of insert operations.
+
+## Authentication and Authorization
+
+**Current State**: The schema includes a users table with username and password fields, but authentication is not fully implemented in the visible codebase.
+
+**Session Management**: The application includes `connect-pg-simple` as a dependency, suggesting PostgreSQL-backed session storage is intended or partially implemented.
+
+## External Dependencies
+
+**UI Components**: 
+- @radix-ui/* - Comprehensive suite of unstyled, accessible UI primitives
+- shadcn/ui - Pre-built component library built on Radix UI
+- class-variance-authority - Component variant styling
+- tailwindcss - Utility-first CSS framework
+
+**Data Fetching & State**:
+- @tanstack/react-query - Server state management
+- wouter - Lightweight routing
+
+**Database & ORM**:
+- drizzle-orm - Type-safe SQL ORM
+- drizzle-kit - Database migrations and schema management
+- @neondatabase/serverless - Neon PostgreSQL client
+
+**Forms & Validation**:
+- react-hook-form - Form state management
+- @hookform/resolvers - Form validation resolvers
+- zod - Schema validation
+- drizzle-zod - Zod schema generation from Drizzle schemas
+
+**Backend Framework**:
+- express - Web server framework
+- vite - Build tool and dev server
+
+**Utilities**:
+- cheerio - HTML parsing (included but usage not visible in provided files)
+- date-fns - Date manipulation
+- nanoid - Unique ID generation
+- clsx & tailwind-merge - Conditional CSS class handling
+
+**Development Tools**:
+- TypeScript - Type safety
+- @replit/vite-plugin-runtime-error-modal - Development error overlay
+- @replit/vite-plugin-cartographer - Replit development integration (conditional)
