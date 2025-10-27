@@ -153,6 +153,7 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
                     onClick={onAdminClick}
                     className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
                     size="sm"
+                    data-testid="button-admin-mobile"
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Admin
@@ -162,6 +163,7 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
                     variant="outline"
                     className="mx-3"
                     size="sm"
+                    data-testid="button-logout-mobile"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -172,6 +174,7 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
                   onClick={handleLogin}
                   className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
                   size="sm"
+                  data-testid="button-login-mobile"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Login

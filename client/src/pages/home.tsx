@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import PlatformCard from "@/components/platform-card";
@@ -25,6 +26,10 @@ export default function Home() {
   });
 
   const isAuthenticated = authData?.user !== null && authData?.user !== undefined;
+
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated && showAdmin) {
