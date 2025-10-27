@@ -23,7 +23,9 @@ import {
   Plus, 
   Edit, 
   Trash2,
-  ProjectorIcon
+  ProjectorIcon,
+  Link as LinkIcon,
+  Loader2
 } from "lucide-react";
 import type { Company, Platform } from "@shared/schema";
 import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
@@ -46,6 +48,8 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
   const [activeSection, setActiveSection] = useState<AdminSection>("company");
   const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
   const [showPlatformForm, setShowPlatformForm] = useState(false);
+  const [showUrlImport, setShowUrlImport] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -170,6 +174,39 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     },
   });
 
+  // Extract from URL mutation
+  const extractFromUrlMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const response = await apiRequest("POST", "/api/platforms/extract-from-url", { url });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      platformForm.reset({
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        link: data.link,
+        logo: data.logo,
+        isActive: data.isActive,
+        sortOrder: platforms.length + 1,
+      });
+      setShowUrlImport(false);
+      setImportUrl("");
+      setShowPlatformForm(true);
+      toast({
+        title: "Success",
+        description: "Business data extracted! Review and save the platform.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to extract data from URL. Please try again or enter manually.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onCompanySubmit = (data: z.infer<typeof companyFormSchema>) => {
     updateCompanyMutation.mutate(data);
   };
@@ -208,6 +245,22 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       sortOrder: platforms.length + 1,
     });
     setShowPlatformForm(true);
+  };
+
+  const handleImportFromUrl = () => {
+    setShowUrlImport(true);
+  };
+
+  const handleExtractUrl = () => {
+    if (!importUrl.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid URL",
+        variant: "destructive",
+      });
+      return;
+    }
+    extractFromUrlMutation.mutate(importUrl);
   };
 
   const navItems = [
@@ -344,13 +397,24 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-lamplight-primary">Manage Platforms</h3>
-                  <Button 
-                    onClick={handleAddPlatform}
-                    className="bg-lamplight-success hover:bg-emerald-600 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Platform
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleImportFromUrl}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                      data-testid="button-import-url"
+                    >
+                      <LinkIcon className="h-4 w-4 mr-2" />
+                      Import from URL
+                    </Button>
+                    <Button 
+                      onClick={handleAddPlatform}
+                      className="bg-lamplight-success hover:bg-emerald-600 text-white"
+                      data-testid="button-add-platform"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Platform
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-4">
                   {platforms.map((platform) => (
@@ -549,6 +613,67 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* URL Import Dialog */}
+      <Dialog open={showUrlImport} onOpenChange={setShowUrlImport}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Platform from URL</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">
+              Enter a business website URL and our AI will extract the business name, 
+              description, category, and find an appropriate image.
+            </p>
+            <div>
+              <Input
+                type="url"
+                placeholder="https://example.com"
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !extractFromUrlMutation.isPending) {
+                    handleExtractUrl();
+                  }
+                }}
+                disabled={extractFromUrlMutation.isPending}
+                data-testid="input-import-url"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowUrlImport(false);
+                  setImportUrl("");
+                }}
+                disabled={extractFromUrlMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExtractUrl}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+                disabled={extractFromUrlMutation.isPending}
+                data-testid="button-extract-url"
+              >
+                {extractFromUrlMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Extracting...
+                  </>
+                ) : (
+                  <>
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    Extract Data
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
