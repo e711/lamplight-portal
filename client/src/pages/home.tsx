@@ -30,7 +30,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navigation onAdminClick={() => setShowAdmin(true)} />
+      <Navigation onAdminClick={() => setShowAdmin(true)} company={company} />
       
       <main>
         <HeroSection company={company} />

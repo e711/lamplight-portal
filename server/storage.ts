@@ -54,6 +54,7 @@ export class MemStorage implements IStorage {
     const defaultCompany: Company = {
       id: 1,
       name: "Lamplight Technology",
+      logo: null,
       heroTitle: "Empowering Business Through Software Innovation",
       heroDescription: "Lamplight Technology is a leading holding company specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.",
       aboutTitle: "Building the Future of Software",
@@ -169,7 +170,12 @@ export class MemStorage implements IStorage {
     const company = this.companies.get(id);
     if (!company) return undefined;
     
-    const updatedCompany: Company = { ...company, ...updateData };
+    const updatedCompany: Company = { 
+      ...company, 
+      ...Object.fromEntries(
+        Object.entries(updateData).map(([key, value]) => [key, value ?? null])
+      )
+    };
     this.companies.set(id, updatedCompany);
     return updatedCompany;
   }
@@ -178,7 +184,7 @@ export class MemStorage implements IStorage {
   async getAllPlatforms(): Promise<Platform[]> {
     return Array.from(this.platforms.values())
       .filter(platform => platform.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
   async getPlatform(id: number): Promise<Platform | undefined> {
@@ -188,9 +194,11 @@ export class MemStorage implements IStorage {
   async createPlatform(insertPlatform: InsertPlatform): Promise<Platform> {
     const id = this.currentPlatformId++;
     const platform: Platform = { 
-      ...insertPlatform, 
+      ...insertPlatform,
+      logo: insertPlatform.logo ?? null,
+      isActive: insertPlatform.isActive ?? null,
       id,
-      sortOrder: insertPlatform.sortOrder || id
+      sortOrder: insertPlatform.sortOrder ?? id
     };
     this.platforms.set(id, platform);
     return platform;

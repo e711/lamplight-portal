@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Settings, Menu } from "lucide-react";
+import type { Company } from "@shared/schema";
 
 interface NavigationProps {
   onAdminClick: () => void;
+  company?: Company;
 }
 
-export default function Navigation({ onAdminClick }: NavigationProps) {
+export default function Navigation({ onAdminClick, company }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
@@ -22,7 +24,18 @@ export default function Navigation({ onAdminClick }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-lamplight-primary">Lamplight Technology</h1>
+            {company?.logo ? (
+              <img 
+                src={company.logo} 
+                alt={company.name}
+                className="h-10 w-auto object-contain"
+                data-testid="img-company-logo"
+              />
+            ) : (
+              <h1 className="text-2xl font-bold text-lamplight-primary" data-testid="text-company-name">
+                {company?.name || "Lamplight Technology"}
+              </h1>
+            )}
           </div>
           
           <div className="hidden md:block">

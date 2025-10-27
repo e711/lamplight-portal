@@ -58,6 +58,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
       name: company?.name || "",
+      logo: company?.logo || "",
       heroTitle: company?.heroTitle || "",
       heroDescription: company?.heroDescription || "",
       aboutTitle: company?.aboutTitle || "",
@@ -325,6 +326,31 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                             <Input {...field} />
                           </FormControl>
                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="logo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Logo URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://example.com/logo.png" />
+                          </FormControl>
+                          <FormMessage />
+                          {field.value && (
+                            <div className="mt-2">
+                              <img 
+                                src={field.value} 
+                                alt="Logo preview" 
+                                className="h-16 w-auto object-contain border border-slate-200 rounded p-2"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
                         </FormItem>
                       )}
                     />
