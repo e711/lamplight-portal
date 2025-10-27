@@ -42,7 +42,7 @@ Preferred communication style: Simple, everyday language.
 **Database Provider**: Neon serverless PostgreSQL (indicated by `@neondatabase/serverless` dependency).
 
 **Schema Design**: Three main tables defined in `shared/schema.ts`:
-- `companies` - Stores company information including hero content, about sections, contact details, and maintenance mode flag
+- `companies` - Stores company information including logo (URL or base64), hero content, about sections, contact details, and maintenance mode flag
 - `platforms` - Manages SaaS platform listings with name, description, category, link, logo, active status, and sort order
 - `users` - Basic user authentication with username and password fields
 
@@ -84,7 +84,7 @@ Preferred communication style: Simple, everyday language.
 - vite - Build tool and dev server
 
 **Utilities**:
-- cheerio - HTML parsing (included but usage not visible in provided files)
+- cheerio - HTML parsing for web scraping and URL import feature
 - date-fns - Date manipulation
 - nanoid - Unique ID generation
 - clsx & tailwind-merge - Conditional CSS class handling
@@ -93,3 +93,28 @@ Preferred communication style: Simple, everyday language.
 - TypeScript - Type safety
 - @replit/vite-plugin-runtime-error-modal - Development error overlay
 - @replit/vite-plugin-cartographer - Replit development integration (conditional)
+
+## Key Features
+
+### AI-Powered URL Import
+- Endpoint: POST `/api/platforms/extract-from-url`
+- Uses OpenAI GPT-4o-mini to extract business information from websites
+- Automated SSRF protections: DNS resolution checking, private IP blocking, redirect prevention, 10s timeout
+- Extracts: business name, description, category
+- Image handling: uses Open Graph images or generates new images via OpenAI image generation
+- Integrated into admin panel with "Import from URL" dialog
+
+### Company Logo Management
+- Logo field supports both external URLs and base64-encoded images
+- Admin panel provides two upload methods:
+  1. URL input - paste any image URL
+  2. File upload - select and upload image files (converted to base64)
+- File upload features:
+  - 5MB size limit
+  - Image format validation
+  - Live preview with error handling
+  - Base64 encoding for storage
+- Logo display:
+  - Navigation bar shows logo when available
+  - Falls back to company name text if no logo
+  - Supports both URL and data URL formats
