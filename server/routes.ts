@@ -5,6 +5,7 @@ import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
 import * as cheerio from "cheerio";
+import { promises as dns } from "dns";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Company routes
@@ -119,14 +120,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "URL is required" });
       }
 
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(url);
+      } catch {
+        return res.status(400).json({ message: "Invalid URL format" });
+      }
+
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        return res.status(400).json({ message: "Only HTTP and HTTPS URLs are allowed" });
+      }
+
+      const hostname = parsedUrl.hostname;
+      
+      function isPrivateOrLocalIP(ip: string): boolean {
+        if (ip === 'localhost') return true;
+        
+        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (ipv4Regex.test(ip)) {
+          const parts = ip.split('.').map(Number);
+          if (parts.some(p => p > 255)) return false;
+          
+          if (
+            parts[0] === 10 ||
+            (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+            (parts[0] === 192 && parts[1] === 168) ||
+            parts[0] === 127 ||
+            parts[0] === 0 ||
+            (parts[0] === 169 && parts[1] === 254)
+          ) {
+            return true;
+          }
+        }
+        
+        const ipv6Patterns = [
+          /^::1$/,
+          /^fe80:/i,
+          /^fc00:/i,
+          /^fd[0-9a-f]{2}:/i,
+          /^::ffff:(?:10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|127\.)/i
+        ];
+        
+        if (ipv6Patterns.some(pattern => pattern.test(ip))) {
+          return true;
+        }
+        
+        return false;
+      }
+
+      if (hostname === 'localhost' || hostname.endsWith('.local') || isPrivateOrLocalIP(hostname)) {
+        return res.status(400).json({ message: "Private or local addresses are not allowed" });
+      }
+
+      let resolvedAddresses: string[] = [];
+      try {
+        const result = await dns.resolve(hostname);
+        resolvedAddresses = result;
+      } catch (dnsError) {
+        try {
+          const result = await dns.resolve4(hostname);
+          resolvedAddresses = result;
+        } catch {
+          return res.status(400).json({ message: "Unable to resolve hostname" });
+        }
+      }
+
+      for (const addr of resolvedAddresses) {
+        if (isPrivateOrLocalIP(addr)) {
+          return res.status(400).json({ message: "URL resolves to a private or local IP address" });
+        }
+      }
+
       const openai = new OpenAI({
         apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
         baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
       });
 
-      const response = await fetch(url);
-      if (!response.ok) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      let response;
+      try {
+        response = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'LamplightTechnology-Bot/1.0'
+          },
+          redirect: 'manual'
+        });
+      } catch (fetchError: any) {
+        clearTimeout(timeout);
+        if (fetchError.name === 'AbortError') {
+          return res.status(408).json({ message: "Request timeout - URL took too long to respond" });
+        }
         return res.status(400).json({ message: "Failed to fetch URL" });
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      if (response.status >= 300 && response.status < 400) {
+        return res.status(400).json({ message: "Redirects are not allowed for security reasons" });
+      }
+
+      if (!response.ok) {
+        return res.status(400).json({ message: `Failed to fetch URL (HTTP ${response.status})` });
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/html')) {
+        return res.status(400).json({ message: "URL must point to an HTML page" });
       }
 
       const html = await response.text();
@@ -172,6 +274,10 @@ Be concise and professional.`
         temperature: 0.7,
       });
 
+      if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message.content) {
+        return res.status(500).json({ message: "AI service returned unexpected response" });
+      }
+
       const extractedData = JSON.parse(completion.choices[0].message.content || "{}");
       
       let logoUrl = ogImage || '';
@@ -185,7 +291,9 @@ Be concise and professional.`
             size: "1024x1024",
           });
           
-          logoUrl = imageCompletion.data[0].url || '';
+          if (imageCompletion.data && imageCompletion.data[0]?.url) {
+            logoUrl = imageCompletion.data[0].url;
+          }
         } catch (imageError) {
           console.error("Image generation failed:", imageError);
         }
