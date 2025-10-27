@@ -339,7 +339,8 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                           <div className="space-y-2">
                             <FormControl>
                               <Input 
-                                {...field} 
+                                {...field}
+                                value={field.value || ""}
                                 placeholder="https://example.com/logo.png"
                                 onChange={(e) => {
                                   field.onChange(e);
@@ -639,7 +640,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                   <FormItem>
                     <FormLabel>Logo URL</FormLabel>
                     <FormControl>
-                      <Input {...field} type="url" />
+                      <Input {...field} value={field.value || ""} type="url" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -652,7 +653,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                   <FormItem className="flex items-center space-x-2">
                     <FormControl>
                       <Switch 
-                        checked={field.value} 
+                        checked={field.value || false} 
                         onCheckedChange={field.onChange} 
                       />
                     </FormControl>
