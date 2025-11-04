@@ -51,44 +51,75 @@ const isPrivateOrLocalIP = (ip: string): boolean => {
   return false;
 };
 
-const fetchPlaceholderImage = async (category: string): Promise<string> => {
-  // Map categories to specific Unsplash photo IDs for consistent, high-quality images
-  const categoryImages: Record<string, string> = {
-    'project management': 'https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'financial analytics': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'finance': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'customer service': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'marketing': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'marketing automation': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'human resources': 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'hr': 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'e-commerce': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'ecommerce': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'retail': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'analytics': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'data': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'software': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'development': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-    'business': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
-  };
-  
-  // Try to match category (case-insensitive)
-  const categoryKey = category.toLowerCase();
-  if (categoryImages[categoryKey]) {
-    return categoryImages[categoryKey];
-  }
-  
-  // Check for partial matches
-  for (const [key, url] of Object.entries(categoryImages)) {
-    if (categoryKey.includes(key) || key.includes(categoryKey)) {
-      return categoryImages[key];
+const fetchPlaceholderImage = async (category: string, name?: string): Promise<string> => {
+  try {
+    // Try Unsplash API first for better contextual images
+    const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
+    
+    if (UNSPLASH_ACCESS_KEY) {
+      // Create search query from category and optionally name
+      const searchTerms = [category];
+      if (name) {
+        searchTerms.push(name);
+      }
+      searchTerms.push('business', 'professional');
+      
+      const query = searchTerms.join(' ');
+      
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=10&orientation=landscape`,
+        {
+          headers: {
+            'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          // Get a random image from the results for variety
+          const randomIndex = Math.floor(Math.random() * data.results.length);
+          const photo = data.results[randomIndex];
+          return `${photo.urls.regular}&w=400&h=200&fit=crop`;
+        }
+      }
     }
+    
+    // Fallback to curated images if Unsplash API fails or no key
+    const categoryImages: Record<string, string> = {
+      'project management': 'https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'financial analytics': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'finance': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'customer service': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'marketing automation': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'human resources': 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'e-commerce': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'technology': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'analytics': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+      'business': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200',
+    };
+    
+    const categoryKey = category.toLowerCase();
+    if (categoryImages[categoryKey]) {
+      return categoryImages[categoryKey];
+    }
+    
+    // Check for partial matches
+    for (const [key, url] of Object.entries(categoryImages)) {
+      if (categoryKey.includes(key) || key.includes(categoryKey)) {
+        return url;
+      }
+    }
+    
+    // Final fallback to a professional business image
+    return 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200';
+    
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    // Return a safe fallback
+    return 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200';
   }
-  
-  // Default fallback: random professional business image from Lorem Picsum
-  const randomSeed = Math.floor(Math.random() * 1000);
-  return `https://picsum.photos/seed/${randomSeed}/1600/900`;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -213,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Category is required" });
       }
 
-      const logoUrl = await fetchPlaceholderImage(category);
+      const logoUrl = await fetchPlaceholderImage(category, name);
       
       if (!logoUrl) {
         return res.status(500).json({ message: "Failed to generate logo image" });
