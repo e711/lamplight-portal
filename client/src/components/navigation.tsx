@@ -13,11 +13,21 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogin = () => {
-    window.location.href = '/api/login';
+    // Use window.top to break out of iframe for Auth0 redirect
+    if (window.top) {
+      window.top.location.href = '/api/login';
+    } else {
+      window.location.href = '/api/login';
+    }
   };
 
   const handleLogout = () => {
-    window.location.href = '/api/logout';
+    // Use window.top to break out of iframe for Auth0 redirect
+    if (window.top) {
+      window.top.location.href = '/api/logout';
+    } else {
+      window.location.href = '/api/logout';
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
