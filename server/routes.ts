@@ -51,23 +51,29 @@ const isPrivateOrLocalIP = (ip: string): boolean => {
   return false;
 };
 
-const fetchUnsplashImage = async (query: string): Promise<string> => {
+const generateLogoImage = async (category: string, name?: string): Promise<string> => {
+  const openai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+  
   try {
-    const unsplashResponse = await fetch(
-      `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&orientation=landscape`,
-      {
-        headers: {
-          'Authorization': 'Client-ID hOJ9DYC6h7wNKUZQYR8wOkmEPd93SypZzdCTGPbRN_k'
-        }
-      }
-    );
+    const prompt = name 
+      ? `Professional business hero image for "${name}", a ${category} platform. Modern, clean, professional design with relevant imagery.`
+      : `Professional business hero image for a ${category} platform. Modern, clean, professional design with relevant imagery.`;
     
-    if (unsplashResponse.ok) {
-      const unsplashData = await unsplashResponse.json();
-      return unsplashData.urls?.regular || unsplashData.urls?.small || '';
+    const imageCompletion = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+    
+    if (imageCompletion.data && imageCompletion.data[0]?.url) {
+      return imageCompletion.data[0].url;
     }
   } catch (error) {
-    console.error("Unsplash fetch failed:", error);
+    console.error("Image generation failed:", error);
   }
   return '';
 };
@@ -194,10 +200,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Category is required" });
       }
 
-      const logoUrl = await fetchUnsplashImage(category);
+      const logoUrl = await generateLogoImage(category, name);
       
       if (!logoUrl) {
-        return res.status(500).json({ message: "Failed to fetch image from Unsplash" });
+        return res.status(500).json({ message: "Failed to generate logo image" });
       }
 
       res.json({ logo: logoUrl });
@@ -343,26 +349,9 @@ Be concise and professional.`
       let logoUrl = ogImage || '';
       
       if (!logoUrl) {
-        const unsplashQuery = extractedData.category || 'technology business';
-        logoUrl = await fetchUnsplashImage(unsplashQuery);
-        
-        if (!logoUrl) {
-          // Fallback to OpenAI image generation if Unsplash fails
-          try {
-            const imageCompletion = await openai.images.generate({
-              model: "gpt-image-1",
-              prompt: `Professional business logo or hero image for "${extractedData.name}", a ${extractedData.category} platform. Modern, clean, tech-focused design.`,
-              n: 1,
-              size: "1024x1024",
-            });
-            
-            if (imageCompletion.data && imageCompletion.data[0]?.url) {
-              logoUrl = imageCompletion.data[0].url;
-            }
-          } catch (imageError) {
-            console.error("Image generation failed:", imageError);
-          }
-        }
+        const category = extractedData.category || 'technology business';
+        const name = extractedData.name;
+        logoUrl = await generateLogoImage(category, name);
       }
 
       const platformData = {
