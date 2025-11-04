@@ -51,42 +51,44 @@ const isPrivateOrLocalIP = (ip: string): boolean => {
   return false;
 };
 
-const fetchUnsplashImage = async (category: string): Promise<string> => {
-  try {
-    // Use Unsplash Source API - free, no API key needed
-    // This returns a redirect to a random image based on search query
-    const searchQuery = category.toLowerCase().replace(/\s+/g, ',');
-    const unsplashUrl = `https://source.unsplash.com/1600x900/?${searchQuery},business,professional`;
-    
-    // Follow the redirect to get the actual image URL
-    const response = await fetch(unsplashUrl, { 
-      method: 'GET',
-      redirect: 'follow'
-    });
-    
-    if (response.ok) {
-      // Return the final URL after following all redirects
-      return response.url;
-    }
-  } catch (error) {
-    console.error("Unsplash fetch failed:", error);
+const fetchPlaceholderImage = async (category: string): Promise<string> => {
+  // Map categories to specific Unsplash photo IDs for consistent, high-quality images
+  const categoryImages: Record<string, string> = {
+    'project management': 'https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'financial analytics': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'finance': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'customer service': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'marketing': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'marketing automation': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'human resources': 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'hr': 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'e-commerce': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'ecommerce': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'retail': 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'analytics': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'data': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'software': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'development': 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+    'business': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900',
+  };
+  
+  // Try to match category (case-insensitive)
+  const categoryKey = category.toLowerCase();
+  if (categoryImages[categoryKey]) {
+    return categoryImages[categoryKey];
   }
   
-  // Fallback: try to get a generic business image
-  try {
-    const fallbackUrl = 'https://source.unsplash.com/1600x900/?business,technology,office';
-    const fallbackResponse = await fetch(fallbackUrl, {
-      method: 'GET',
-      redirect: 'follow'
-    });
-    if (fallbackResponse.ok) {
-      return fallbackResponse.url;
+  // Check for partial matches
+  for (const [key, url] of Object.entries(categoryImages)) {
+    if (categoryKey.includes(key) || key.includes(categoryKey)) {
+      return categoryImages[key];
     }
-  } catch (error) {
-    console.error("Fallback Unsplash fetch also failed:", error);
   }
   
-  return '';
+  // Default fallback: random professional business image from Lorem Picsum
+  const randomSeed = Math.floor(Math.random() * 1000);
+  return `https://picsum.photos/seed/${randomSeed}/1600/900`;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -211,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Category is required" });
       }
 
-      const logoUrl = await fetchUnsplashImage(category);
+      const logoUrl = await fetchPlaceholderImage(category);
       
       if (!logoUrl) {
         return res.status(500).json({ message: "Failed to generate logo image" });
@@ -361,7 +363,7 @@ Be concise and professional.`
       
       if (!logoUrl) {
         const category = extractedData.category || 'technology business';
-        logoUrl = await fetchUnsplashImage(category);
+        logoUrl = await fetchPlaceholderImage(category);
       }
 
       const platformData = {
