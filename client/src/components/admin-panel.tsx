@@ -25,7 +25,8 @@ import {
   Trash2,
   ProjectorIcon,
   Link as LinkIcon,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import type { Company, Platform } from "@shared/schema";
 import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
@@ -51,6 +52,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
   const [showUrlImport, setShowUrlImport] = useState(false);
   const [importUrl, setImportUrl] = useState("");
   const [logoPreviewError, setLogoPreviewError] = useState(false);
+  const [generatingLogo, setGeneratingLogo] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -639,9 +641,57 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Logo URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value || ""} type="url" />
-                    </FormControl>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} type="url" />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={generatingLogo || !platformForm.watch("category")}
+                        onClick={async () => {
+                          const category = platformForm.watch("category");
+                          if (!category) {
+                            toast({
+                              title: "Error",
+                              description: "Please enter a category first",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          setGeneratingLogo(true);
+                          try {
+                            const response = await apiRequest("POST", "/api/platforms/generate-logo", {
+                              category,
+                              name: platformForm.watch("name")
+                            });
+                            const data = await response.json();
+                            platformForm.setValue("logo", data.logo);
+                            toast({
+                              title: "Success",
+                              description: "Logo generated from Unsplash",
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to generate logo",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setGeneratingLogo(false);
+                          }
+                        }}
+                        data-testid="button-generate-logo"
+                      >
+                        {generatingLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

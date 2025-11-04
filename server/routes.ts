@@ -16,6 +16,62 @@ const requiresAuth = () => {
   };
 };
 
+const isPrivateOrLocalIP = (ip: string): boolean => {
+  if (ip === 'localhost') return true;
+  
+  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+  if (ipv4Regex.test(ip)) {
+    const parts = ip.split('.').map(Number);
+    if (parts.some(p => p > 255)) return false;
+    
+    if (
+      parts[0] === 10 ||
+      (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+      (parts[0] === 192 && parts[1] === 168) ||
+      parts[0] === 127 ||
+      parts[0] === 0 ||
+      (parts[0] === 169 && parts[1] === 254)
+    ) {
+      return true;
+    }
+  }
+  
+  const ipv6Patterns = [
+    /^::1$/,
+    /^fe80:/i,
+    /^fc00:/i,
+    /^fd[0-9a-f]{2}:/i,
+    /^::ffff:(?:10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|127\.)/i
+  ];
+  
+  if (ipv6Patterns.some(pattern => pattern.test(ip))) {
+    return true;
+  }
+  
+  return false;
+};
+
+const fetchUnsplashImage = async (query: string): Promise<string> => {
+  try {
+    const unsplashResponse = await fetch(
+      `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': 'Client-ID hOJ9DYC6h7wNKUZQYR8wOkmEPd93SypZzdCTGPbRN_k'
+        }
+      }
+    );
+    
+    if (unsplashResponse.ok) {
+      const unsplashData = await unsplashResponse.json();
+      return unsplashData.urls?.regular || unsplashData.urls?.small || '';
+    }
+  } catch (error) {
+    console.error("Unsplash fetch failed:", error);
+  }
+  return '';
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get("/api/user", (req: Request, res: Response) => {
@@ -130,6 +186,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/platforms/generate-logo", requiresAuth(), async (req, res) => {
+    try {
+      const { category, name } = req.body;
+      
+      if (!category || typeof category !== 'string') {
+        return res.status(400).json({ message: "Category is required" });
+      }
+
+      const logoUrl = await fetchUnsplashImage(category);
+      
+      if (!logoUrl) {
+        return res.status(500).json({ message: "Failed to fetch image from Unsplash" });
+      }
+
+      res.json({ logo: logoUrl });
+    } catch (error) {
+      console.error("Generate logo error:", error);
+      res.status(500).json({ message: "Failed to generate logo" });
+    }
+  });
+
   app.post("/api/platforms/extract-from-url", requiresAuth(), async (req, res) => {
     try {
       const { url } = req.body;
@@ -150,41 +227,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const hostname = parsedUrl.hostname;
-      
-      function isPrivateOrLocalIP(ip: string): boolean {
-        if (ip === 'localhost') return true;
-        
-        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-        if (ipv4Regex.test(ip)) {
-          const parts = ip.split('.').map(Number);
-          if (parts.some(p => p > 255)) return false;
-          
-          if (
-            parts[0] === 10 ||
-            (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
-            (parts[0] === 192 && parts[1] === 168) ||
-            parts[0] === 127 ||
-            parts[0] === 0 ||
-            (parts[0] === 169 && parts[1] === 254)
-          ) {
-            return true;
-          }
-        }
-        
-        const ipv6Patterns = [
-          /^::1$/,
-          /^fe80:/i,
-          /^fc00:/i,
-          /^fd[0-9a-f]{2}:/i,
-          /^::ffff:(?:10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|127\.)/i
-        ];
-        
-        if (ipv6Patterns.some(pattern => pattern.test(ip))) {
-          return true;
-        }
-        
-        return false;
-      }
 
       if (hostname === 'localhost' || hostname.endsWith('.local') || isPrivateOrLocalIP(hostname)) {
         return res.status(400).json({ message: "Private or local addresses are not allowed" });
@@ -301,25 +343,10 @@ Be concise and professional.`
       let logoUrl = ogImage || '';
       
       if (!logoUrl) {
-        try {
-          // Fetch a relevant stock image from Unsplash based on the business category
-          const unsplashQuery = extractedData.category || 'technology business';
-          const unsplashResponse = await fetch(
-            `https://api.unsplash.com/photos/random?query=${encodeURIComponent(unsplashQuery)}&orientation=landscape`,
-            {
-              headers: {
-                'Authorization': 'Client-ID hOJ9DYC6h7wNKUZQYR8wOkmEPd93SypZzdCTGPbRN_k'
-              }
-            }
-          );
-          
-          if (unsplashResponse.ok) {
-            const unsplashData = await unsplashResponse.json();
-            logoUrl = unsplashData.urls?.regular || unsplashData.urls?.small || '';
-          }
-        } catch (unsplashError) {
-          console.error("Unsplash fetch failed, trying OpenAI image generation:", unsplashError);
-          
+        const unsplashQuery = extractedData.category || 'technology business';
+        logoUrl = await fetchUnsplashImage(unsplashQuery);
+        
+        if (!logoUrl) {
           // Fallback to OpenAI image generation if Unsplash fails
           try {
             const imageCompletion = await openai.images.generate({
@@ -333,7 +360,7 @@ Be concise and professional.`
               logoUrl = imageCompletion.data[0].url;
             }
           } catch (imageError) {
-            console.error("Image generation also failed:", imageError);
+            console.error("Image generation failed:", imageError);
           }
         }
       }

@@ -46,7 +46,9 @@ Preferred communication style: Simple, everyday language.
 - `platforms` - Manages SaaS platform listings with name, description, category, link, logo, active status, and sort order
 - `users` - Basic user authentication with username and password fields
 
-**Storage Abstraction**: The application uses a storage interface (`IStorage`) with an in-memory implementation (`MemStorage`) for development/testing. This allows for easy swapping between in-memory and database-backed storage.
+**Storage Implementation**: The application uses a storage interface (`IStorage`) with a PostgreSQL-backed implementation (`DbStorage`). All data is persisted to the database and survives server restarts.
+
+**Data Seeding**: On first run, the database is automatically seeded with default company information and 6 sample platform entries.
 
 **Data Validation**: Drizzle-Zod generates Zod schemas from the database schema for runtime validation of insert operations.
 
@@ -122,8 +124,19 @@ Preferred communication style: Simple, everyday language.
 - Uses OpenAI GPT-4o-mini to extract business information from websites
 - Automated SSRF protections: DNS resolution checking, private IP blocking, redirect prevention, 10s timeout
 - Extracts: business name, description, category
-- Image handling: uses Open Graph images or generates new images via OpenAI image generation
+- Image handling priority:
+  1. Uses Open Graph image from the website if available
+  2. Fetches relevant professional stock photo from Unsplash based on category
+  3. Falls back to OpenAI image generation if Unsplash fails
 - Integrated into admin panel with "Import from URL" dialog
+
+### Logo Generation
+- Endpoint: POST `/api/platforms/generate-logo`
+- Generates professional logos/hero images for platforms
+- Uses Unsplash API to fetch high-quality stock photos based on platform category
+- Integrated into admin panel with sparkle button (✨) next to Logo URL field
+- Available in both "Add Platform" and "Edit Platform" dialogs
+- Requires category to be filled before generation
 
 ### Company Logo Management
 - Logo field supports both external URLs and base64-encoded images
