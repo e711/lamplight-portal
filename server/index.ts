@@ -10,6 +10,7 @@ app.use(express.urlencoded({ extended: false }));
 const config = {
   authRequired: false,
   auth0Logout: true,
+  idpLogout: true,
   secret: process.env.AUTH0_SECRET,
   baseURL: process.env.REPLIT_DEV_DOMAIN 
     ? `https://${process.env.REPLIT_DEV_DOMAIN}`
@@ -21,6 +22,11 @@ const config = {
     login: '/api/login',
     logout: '/api/logout',
     postLogoutRedirect: '/'
+  },
+  session: {
+    name: 'lamplight_session',
+    rolling: true,
+    rollingDuration: 86400
   }
 };
 
