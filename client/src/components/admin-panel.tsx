@@ -185,6 +185,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       return response.json();
     },
     onSuccess: (data) => {
+      setEditingPlatform(null); // Clear editing state
       platformForm.reset({
         name: data.name,
         description: data.description,
