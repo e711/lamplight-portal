@@ -58,19 +58,35 @@ const fetchUnsplashImage = async (category: string): Promise<string> => {
     const searchQuery = category.toLowerCase().replace(/\s+/g, ',');
     const unsplashUrl = `https://source.unsplash.com/1600x900/?${searchQuery},business,professional`;
     
-    // Test if the URL works by making a HEAD request
-    const response = await fetch(unsplashUrl, { method: 'HEAD' });
+    // Follow the redirect to get the actual image URL
+    const response = await fetch(unsplashUrl, { 
+      method: 'GET',
+      redirect: 'follow'
+    });
     
     if (response.ok) {
-      // Return the final URL after redirect
+      // Return the final URL after following all redirects
       return response.url;
     }
   } catch (error) {
     console.error("Unsplash fetch failed:", error);
   }
   
-  // Fallback to a generic business/technology image
-  return 'https://source.unsplash.com/1600x900/?business,technology,office';
+  // Fallback: try to get a generic business image
+  try {
+    const fallbackUrl = 'https://source.unsplash.com/1600x900/?business,technology,office';
+    const fallbackResponse = await fetch(fallbackUrl, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    if (fallbackResponse.ok) {
+      return fallbackResponse.url;
+    }
+  } catch (error) {
+    console.error("Fallback Unsplash fetch also failed:", error);
+  }
+  
+  return '';
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
