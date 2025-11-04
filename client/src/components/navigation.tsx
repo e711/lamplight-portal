@@ -13,18 +13,20 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogin = () => {
-    // Use window.top to break out of iframe for Auth0 redirect
-    if (window.top) {
-      window.top.location.href = '/api/login';
+    // Check if we're in an iframe (Replit workspace)
+    if (window.self !== window.top) {
+      // Open in new tab to avoid iframe restrictions
+      window.open('/api/login', '_blank');
     } else {
       window.location.href = '/api/login';
     }
   };
 
   const handleLogout = () => {
-    // Use window.top to break out of iframe for Auth0 redirect
-    if (window.top) {
-      window.top.location.href = '/api/logout';
+    // Check if we're in an iframe (Replit workspace)
+    if (window.self !== window.top) {
+      // Open in new tab to avoid iframe restrictions
+      window.open('/api/logout', '_blank');
     } else {
       window.location.href = '/api/logout';
     }
