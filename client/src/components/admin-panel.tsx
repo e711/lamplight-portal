@@ -641,57 +641,103 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                 name="logo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Logo URL</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input {...field} value={field.value || ""} type="url" />
-                      </FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={generatingLogo || !platformForm.watch("category")}
-                        onClick={async () => {
-                          const category = platformForm.watch("category");
-                          if (!category) {
-                            toast({
-                              title: "Error",
-                              description: "Please enter a category first",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          
-                          setGeneratingLogo(true);
-                          try {
-                            const response = await apiRequest("POST", "/api/platforms/generate-logo", {
-                              category,
-                              name: platformForm.watch("name")
-                            });
-                            const data = await response.json();
-                            platformForm.setValue("logo", data.logo);
-                            toast({
-                              title: "Success",
-                              description: "Logo generated from Unsplash",
-                            });
-                          } catch (error) {
-                            toast({
-                              title: "Error",
-                              description: "Failed to generate logo",
-                              variant: "destructive",
-                            });
-                          } finally {
-                            setGeneratingLogo(false);
-                          }
-                        }}
-                        data-testid="button-generate-logo"
-                      >
-                        {generatingLogo ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4" />
-                        )}
-                      </Button>
+                    <FormLabel>Platform Logo</FormLabel>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            value={field.value || ""} 
+                            type="url"
+                            placeholder="https://example.com/logo.png" 
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={generatingLogo || !platformForm.watch("category")}
+                          onClick={async () => {
+                            const category = platformForm.watch("category");
+                            if (!category) {
+                              toast({
+                                title: "Error",
+                                description: "Please enter a category first",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            
+                            setGeneratingLogo(true);
+                            try {
+                              const response = await apiRequest("POST", "/api/platforms/generate-logo", {
+                                category,
+                                name: platformForm.watch("name")
+                              });
+                              const data = await response.json();
+                              platformForm.setValue("logo", data.logo);
+                              toast({
+                                title: "Success",
+                                description: "Logo generated successfully",
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to generate logo",
+                                variant: "destructive",
+                              });
+                            } finally {
+                              setGeneratingLogo(false);
+                            }
+                          }}
+                          data-testid="button-generate-logo"
+                        >
+                          {generatingLogo ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-500">or upload an image</span>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 5000000) {
+                                toast({
+                                  title: "Error",
+                                  description: "Image must be less than 5MB",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                field.onChange(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="flex-1"
+                          data-testid="input-platform-logo-upload"
+                        />
+                      </div>
+                      {field.value && (
+                        <div className="mt-2">
+                          <img 
+                            src={field.value} 
+                            alt="Logo preview" 
+                            className="h-16 w-auto object-contain border border-slate-200 rounded p-2"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                     <FormMessage />
                   </FormItem>

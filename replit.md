@@ -131,12 +131,23 @@ Preferred communication style: Simple, everyday language.
 
 ### Logo Generation
 - Endpoint: POST `/api/platforms/generate-logo`
-- Fetches professional stock photos for platform hero images
-- Uses Unsplash Source API to get high-quality, relevant images based on platform category
-- No API key required - uses free Unsplash Source service
+- Uses curated Unsplash images for common categories or Lorem Picsum for others
+- Provides high-quality, relevant images based on platform category
 - Integrated into admin panel with sparkle button (✨) next to Logo URL field
 - Available in both "Add Platform" and "Edit Platform" dialogs
 - Requires category to be filled before generation
+
+### Platform Logo Management
+- Logo field supports both external URLs and base64-encoded images
+- Admin panel provides three methods:
+  1. URL input - paste any image URL
+  2. Sparkle button (✨) - auto-generate based on category
+  3. File upload - select and upload image files (converted to base64)
+- File upload features:
+  - 5MB size limit
+  - Image format validation
+  - Live preview with error handling
+  - Base64 encoding for storage
 
 ### Company Logo Management
 - Logo field supports both external URLs and base64-encoded images
