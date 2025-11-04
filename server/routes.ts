@@ -302,18 +302,39 @@ Be concise and professional.`
       
       if (!logoUrl) {
         try {
-          const imageCompletion = await openai.images.generate({
-            model: "gpt-image-1",
-            prompt: `Professional business logo or hero image for "${extractedData.name}", a ${extractedData.category} platform. Modern, clean, tech-focused design.`,
-            n: 1,
-            size: "1024x1024",
-          });
+          // Fetch a relevant stock image from Unsplash based on the business category
+          const unsplashQuery = extractedData.category || 'technology business';
+          const unsplashResponse = await fetch(
+            `https://api.unsplash.com/photos/random?query=${encodeURIComponent(unsplashQuery)}&orientation=landscape`,
+            {
+              headers: {
+                'Authorization': 'Client-ID hOJ9DYC6h7wNKUZQYR8wOkmEPd93SypZzdCTGPbRN_k'
+              }
+            }
+          );
           
-          if (imageCompletion.data && imageCompletion.data[0]?.url) {
-            logoUrl = imageCompletion.data[0].url;
+          if (unsplashResponse.ok) {
+            const unsplashData = await unsplashResponse.json();
+            logoUrl = unsplashData.urls?.regular || unsplashData.urls?.small || '';
           }
-        } catch (imageError) {
-          console.error("Image generation failed:", imageError);
+        } catch (unsplashError) {
+          console.error("Unsplash fetch failed, trying OpenAI image generation:", unsplashError);
+          
+          // Fallback to OpenAI image generation if Unsplash fails
+          try {
+            const imageCompletion = await openai.images.generate({
+              model: "gpt-image-1",
+              prompt: `Professional business logo or hero image for "${extractedData.name}", a ${extractedData.category} platform. Modern, clean, tech-focused design.`,
+              n: 1,
+              size: "1024x1024",
+            });
+            
+            if (imageCompletion.data && imageCompletion.data[0]?.url) {
+              logoUrl = imageCompletion.data[0].url;
+            }
+          } catch (imageError) {
+            console.error("Image generation also failed:", imageError);
+          }
         }
       }
 
