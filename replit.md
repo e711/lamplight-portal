@@ -126,13 +126,14 @@ Preferred communication style: Simple, everyday language.
 - Extracts: business name, description, category
 - Image handling priority:
   1. Uses Open Graph image from the website if available
-  2. Generates professional hero image via OpenAI image generation based on category
+  2. Fetches relevant professional stock photo from Unsplash Source API based on category
 - Integrated into admin panel with "Import from URL" dialog
 
 ### Logo Generation
 - Endpoint: POST `/api/platforms/generate-logo`
-- Generates professional logos/hero images for platforms
-- Uses OpenAI image generation to create relevant, professional imagery based on platform category
+- Fetches professional stock photos for platform hero images
+- Uses Unsplash Source API to get high-quality, relevant images based on platform category
+- No API key required - uses free Unsplash Source service
 - Integrated into admin panel with sparkle button (✨) next to Logo URL field
 - Available in both "Add Platform" and "Edit Platform" dialogs
 - Requires category to be filled before generation

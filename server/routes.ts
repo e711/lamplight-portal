@@ -51,31 +51,26 @@ const isPrivateOrLocalIP = (ip: string): boolean => {
   return false;
 };
 
-const generateLogoImage = async (category: string, name?: string): Promise<string> => {
-  const openai = new OpenAI({
-    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  });
-  
+const fetchUnsplashImage = async (category: string): Promise<string> => {
   try {
-    const prompt = name 
-      ? `Professional business hero image for "${name}", a ${category} platform. Modern, clean, professional design with relevant imagery.`
-      : `Professional business hero image for a ${category} platform. Modern, clean, professional design with relevant imagery.`;
+    // Use Unsplash Source API - free, no API key needed
+    // This returns a redirect to a random image based on search query
+    const searchQuery = category.toLowerCase().replace(/\s+/g, ',');
+    const unsplashUrl = `https://source.unsplash.com/1600x900/?${searchQuery},business,professional`;
     
-    const imageCompletion = await openai.images.generate({
-      model: "dall-e-3",
-      prompt,
-      n: 1,
-      size: "1024x1024",
-    });
+    // Test if the URL works by making a HEAD request
+    const response = await fetch(unsplashUrl, { method: 'HEAD' });
     
-    if (imageCompletion.data && imageCompletion.data[0]?.url) {
-      return imageCompletion.data[0].url;
+    if (response.ok) {
+      // Return the final URL after redirect
+      return response.url;
     }
   } catch (error) {
-    console.error("Image generation failed:", error);
+    console.error("Unsplash fetch failed:", error);
   }
-  return '';
+  
+  // Fallback to a generic business/technology image
+  return 'https://source.unsplash.com/1600x900/?business,technology,office';
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -200,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Category is required" });
       }
 
-      const logoUrl = await generateLogoImage(category, name);
+      const logoUrl = await fetchUnsplashImage(category);
       
       if (!logoUrl) {
         return res.status(500).json({ message: "Failed to generate logo image" });
@@ -350,8 +345,7 @@ Be concise and professional.`
       
       if (!logoUrl) {
         const category = extractedData.category || 'technology business';
-        const name = extractedData.name;
-        logoUrl = await generateLogoImage(category, name);
+        logoUrl = await fetchUnsplashImage(category);
       }
 
       const platformData = {
