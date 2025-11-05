@@ -7,14 +7,31 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
+const getBaseURL = () => {
+  // Check for custom domain first
+  if (process.env.CUSTOM_DOMAIN) {
+    return `https://${process.env.CUSTOM_DOMAIN}`;
+  }
+  
+  // Check for Replit dev domain
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  
+  // For production, return a function that dynamically determines baseURL
+  return (req: any) => {
+    const host = req.get('host') || req.get('x-forwarded-host');
+    const protocol = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
+    return host ? `${protocol}://${host}` : 'http://localhost:5000';
+  };
+};
+
 const config = {
   authRequired: false,
   auth0Logout: true,
   idpLogout: true,
   secret: process.env.AUTH0_SECRET,
-  baseURL: process.env.REPLIT_DEV_DOMAIN 
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : 'http://localhost:5000',
+  baseURL: getBaseURL(),
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
   routes: {
