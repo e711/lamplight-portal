@@ -388,4 +388,4 @@ export class DbStorage implements IStorage {
   }
 }
 
-export const storage = new DbStorage();
+export const storage = process.env.DATABASE_URL ? new DbStorage() : new MemStorage();

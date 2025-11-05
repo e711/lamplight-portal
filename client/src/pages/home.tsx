@@ -5,6 +5,7 @@ import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import PlatformCard from "@/components/platform-card";
 import AdminPanel from "@/components/admin-panel";
+import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChartLine, Shield, Users } from "lucide-react";
@@ -130,6 +131,8 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      <Footer />
 
       {showAdmin && isAuthenticated && (
         <AdminPanel 

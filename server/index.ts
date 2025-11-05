@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+app.set('env', 'development'); // Force development mode for testing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
@@ -26,28 +27,39 @@ const getBaseURL = () => {
   };
 };
 
-const config = {
-  authRequired: false,
-  auth0Logout: true,
-  idpLogout: true,
-  secret: process.env.AUTH0_SECRET,
-  baseURL: getBaseURL(),
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
-  routes: {
-    callback: '/callback',
-    login: '/api/login',
-    logout: '/api/logout',
-    postLogoutRedirect: '/'
-  },
-  session: {
-    name: 'lamplight_session',
-    rolling: true,
-    rollingDuration: 86400
-  }
-};
+// Only use auth if all required environment variables are present
+if (process.env.AUTH0_SECRET && process.env.AUTH0_CLIENT_ID && process.env.AUTH0_DOMAIN) {
+  const baseURL = getBaseURL();
+  const config = {
+    authRequired: false,
+    auth0Logout: true,
+    idpLogout: true,
+    secret: process.env.AUTH0_SECRET,
+    baseURL: typeof baseURL === 'string' ? baseURL : 'http://localhost:5000',
+    clientID: process.env.AUTH0_CLIENT_ID,
+    issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
+    routes: {
+      callback: '/callback',
+      login: '/api/login',
+      logout: '/api/logout',
+      postLogoutRedirect: '/'
+    },
+    session: {
+      name: 'lamplight_session',
+      rolling: true,
+      rollingDuration: 86400
+    }
+  };
 
-app.use(auth(config));
+  app.use(auth(config));
+} else {
+  console.log('Auth0 configuration not found, running without authentication');
+  // Add a simple middleware to simulate no user logged in
+  app.use((req: any, res, next) => {
+    req.oidc = { user: null, isAuthenticated: () => false };
+    next();
+  });
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -103,11 +115,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  server.listen(port, "localhost", () => {
+    log(`serving on http://localhost:${port}`);
   });
 })();
