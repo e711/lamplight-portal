@@ -8,9 +8,7 @@ export default function Footer() {
           {/* Company Info */}
           <div className="col-span-2">
             <h3 className="text-xl font-bold mb-4 text-blue-400">Lamplight Technology</h3>
-            <p className="text-slate-300 mb-4">
-              A leading holding company specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.
-            </p>
+            <p className="text-slate-300 mb-4">Specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.</p>
             <div className="flex items-center gap-2 text-slate-300 mb-2">
               <Mail className="h-4 w-4" />
               <span>contact@lamplight.tech</span>
