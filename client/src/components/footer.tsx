@@ -11,7 +11,7 @@ export default function Footer() {
             <p className="text-slate-300 mb-4">Specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.</p>
             <div className="flex items-center gap-2 text-slate-300 mb-2">
               <Mail className="h-4 w-4" />
-              <span>contact@lamplight.tech</span>
+              <span>info@llt.llc</span>
             </div>
             <div className="flex items-center gap-2 text-slate-300 mb-2">
               <Phone className="h-4 w-4" />
