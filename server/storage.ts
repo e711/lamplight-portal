@@ -678,7 +678,306 @@ export class DbStorage implements IStorage {
       ];
 
       await this.db.insert(platforms).values(defaultPlatforms);
+
+      // Create default legal documents
+      const defaultLegalDocuments = [
+        {
+          type: 'privacy',
+          title: 'Privacy Policy',
+          content: this.getDefaultPrivacyPolicy(),
+          isActive: true,
+        },
+        {
+          type: 'terms',
+          title: 'Terms of Service',
+          content: this.getDefaultTermsOfService(),
+          isActive: true,
+        },
+        {
+          type: 'cookies',
+          title: 'Cookie Policy',
+          content: this.getDefaultCookiePolicy(),
+          isActive: true,
+        },
+        {
+          type: 'support',
+          title: 'Support Policy',
+          content: this.getDefaultSupportPolicy(),
+          isActive: true,
+        },
+      ];
+
+      await this.db.insert(legalDocuments).values(defaultLegalDocuments);
     }
+  }
+
+  private getDefaultPrivacyPolicy(): string {
+    return `# Privacy Policy
+
+**Effective Date:** ${new Date().toLocaleDateString()}
+
+## Introduction
+
+Lamplight Technology Holdings LLC ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+
+## Information We Collect
+
+### Personal Information
+- Name and contact information
+- Email address and phone number
+- Company information
+- Usage data and analytics
+
+### Automatically Collected Information
+- IP address and browser information
+- Cookies and tracking technologies
+- Device and usage statistics
+
+## How We Use Your Information
+
+We use the information we collect to:
+- Provide and maintain our services
+- Communicate with you about our products
+- Improve our website and services
+- Comply with legal obligations
+
+## Information Sharing
+
+We do not sell, trade, or rent your personal information to third parties. We may share information in the following circumstances:
+- With your consent
+- To comply with legal requirements
+- To protect our rights and safety
+
+## Data Security
+
+We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+
+## Your Rights
+
+You have the right to:
+- Access your personal information
+- Correct inaccurate information
+- Request deletion of your information
+- Opt-out of marketing communications
+
+## Contact Us
+
+If you have questions about this Privacy Policy, please contact us at:
+- Email: privacy@lamplighttech.com
+- Phone: +1 (555) 123-4567
+- Address: Denver, Colorado
+
+This Privacy Policy may be updated from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.`;
+  }
+
+  private getDefaultTermsOfService(): string {
+    return `# Terms of Service
+
+**Effective Date:** ${new Date().toLocaleDateString()}
+
+## Agreement to Terms
+
+By accessing and using the services provided by Lamplight Technology Holdings LLC ("Company," "we," "our," or "us"), you agree to be bound by these Terms of Service.
+
+## Description of Services
+
+Lamplight Technology Holdings LLC provides SaaS platforms and software solutions designed to help businesses operate, scale, and succeed in the digital economy.
+
+## User Accounts
+
+- You are responsible for maintaining the confidentiality of your account
+- You must provide accurate and complete information
+- You are responsible for all activities under your account
+
+## Acceptable Use
+
+You agree not to:
+- Use our services for illegal purposes
+- Attempt to gain unauthorized access to our systems
+- Interfere with the proper functioning of our services
+- Upload malicious code or content
+
+## Intellectual Property
+
+- Our services and content are protected by intellectual property laws
+- You retain ownership of content you create using our services
+- We grant you a limited license to use our services
+
+## Payment Terms
+
+- Fees are charged according to your selected plan
+- Payments are due in advance
+- We reserve the right to suspend services for non-payment
+
+## Limitation of Liability
+
+To the maximum extent permitted by law, Lamplight Technology Holdings LLC shall not be liable for any indirect, incidental, special, or consequential damages.
+
+## Termination
+
+We may terminate or suspend your account at any time for violation of these terms or for any other reason at our sole discretion.
+
+## Governing Law
+
+These terms are governed by the laws of Colorado, United States.
+
+## Contact Information
+
+For questions about these Terms of Service, contact us at:
+- Email: legal@lamplighttech.com
+- Phone: +1 (555) 123-4567
+- Address: Denver, Colorado
+
+These Terms of Service may be updated from time to time. Continued use of our services constitutes acceptance of any changes.`;
+  }
+
+  private getDefaultCookiePolicy(): string {
+    return `# Cookie Policy
+
+**Effective Date:** ${new Date().toLocaleDateString()}
+
+## What Are Cookies
+
+Cookies are small text files that are placed on your device when you visit our website. They help us provide you with a better experience by remembering your preferences and analyzing how you use our site.
+
+## Types of Cookies We Use
+
+### Essential Cookies
+These cookies are necessary for the website to function properly and cannot be disabled.
+
+### Analytics Cookies
+We use analytics cookies to understand how visitors interact with our website, helping us improve our services.
+
+### Functional Cookies
+These cookies enable enhanced functionality and personalization, such as remembering your preferences.
+
+### Marketing Cookies
+We may use marketing cookies to show you relevant advertisements and measure the effectiveness of our campaigns.
+
+## Third-Party Cookies
+
+We may use third-party services that place cookies on your device:
+- Google Analytics for website analytics
+- Social media platforms for sharing functionality
+- Customer support tools
+
+## Managing Cookies
+
+You can control cookies through your browser settings:
+- **Chrome:** Settings > Privacy and Security > Cookies
+- **Firefox:** Settings > Privacy & Security > Cookies
+- **Safari:** Preferences > Privacy > Cookies
+- **Edge:** Settings > Privacy & Security > Cookies
+
+## Cookie Consent
+
+By continuing to use our website, you consent to our use of cookies as described in this policy.
+
+## Updates to This Policy
+
+We may update this Cookie Policy from time to time. Any changes will be posted on this page with an updated effective date.
+
+## Contact Us
+
+If you have questions about our use of cookies, please contact us at:
+- Email: privacy@lamplighttech.com
+- Phone: +1 (555) 123-4567
+
+Lamplight Technology Holdings LLC
+Denver, Colorado`;
+  }
+
+  private getDefaultSupportPolicy(): string {
+    return `# Support Policy
+
+**Effective Date:** ${new Date().toLocaleDateString()}
+
+## Our Commitment
+
+Lamplight Technology Holdings LLC is committed to providing excellent customer support for all our SaaS platforms and services.
+
+## Support Channels
+
+### Email Support
+- General inquiries: support@lamplighttech.com
+- Technical issues: technical@lamplighttech.com
+- Billing questions: billing@lamplighttech.com
+
+### Phone Support
+- Phone: +1 (555) 123-4567
+- Business hours: Monday-Friday, 9 AM - 6 PM MT
+
+### Online Resources
+- Knowledge base and documentation
+- Video tutorials and guides
+- Community forums
+
+## Response Times
+
+### Priority Levels
+
+**Critical Issues (System Down)**
+- Response time: Within 1 hour
+- Resolution target: Within 4 hours
+
+**High Priority (Major Functionality Impacted)**
+- Response time: Within 4 hours
+- Resolution target: Within 24 hours
+
+**Medium Priority (Minor Issues)**
+- Response time: Within 24 hours
+- Resolution target: Within 72 hours
+
+**Low Priority (General Questions)**
+- Response time: Within 48 hours
+- Resolution target: Within 5 business days
+
+## Support Scope
+
+### Included Support
+- Platform functionality questions
+- Technical troubleshooting
+- Account and billing assistance
+- Best practices guidance
+
+### Not Included
+- Custom development work
+- Third-party integrations (beyond our platforms)
+- Training beyond standard documentation
+
+## Escalation Process
+
+If you're not satisfied with the initial support response:
+1. Request escalation to a senior support specialist
+2. Contact our support manager at manager@lamplighttech.com
+3. Reach out to our customer success team
+
+## Support Hours
+
+- **Standard Support:** Monday-Friday, 9 AM - 6 PM MT
+- **Emergency Support:** 24/7 for critical system issues
+- **Holiday Schedule:** Reduced hours on major holidays
+
+## Getting Better Support
+
+To help us assist you more effectively:
+- Provide detailed descriptions of issues
+- Include relevant screenshots or error messages
+- Specify which platform or service you're using
+- Include your account information
+
+## Feedback
+
+We value your feedback on our support services. Please let us know how we can improve by contacting feedback@lamplighttech.com.
+
+## Contact Information
+
+**Lamplight Technology Holdings LLC**
+- Email: support@lamplighttech.com
+- Phone: +1 (555) 123-4567
+- Address: Denver, Colorado
+
+This Support Policy may be updated to reflect changes in our services or support procedures.`;
   }
 
   // User methods

@@ -78,7 +78,7 @@ export default function LegalDocumentPage() {
         </Card>
 
         <div className="mt-8 text-center text-slate-500">
-          <p>© 2024 Lamplight Technology Holdings LLC. All rights reserved.</p>
+          <p>© 2025 Lamplight Technology Holdings LLC. All rights reserved.</p>
         </div>
       </div>
     </div>
