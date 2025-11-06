@@ -13,10 +13,7 @@ export default function Footer() {
               <Mail className="h-4 w-4" />
               <span>info@llt.llc</span>
             </div>
-            <div className="flex items-center gap-2 text-slate-300 mb-2">
-              <Phone className="h-4 w-4" />
-              <span>.</span>
-            </div>
+            
             <div className="flex items-center gap-2 text-slate-300">
               <MapPin className="h-4 w-4" />
             </div>
