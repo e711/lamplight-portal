@@ -39,7 +39,7 @@ export default function HeroSection({ company }: HeroSectionProps) {
             )}
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-200 max-w-3xl mx-auto">
-            {company?.heroDescription || "Lamplight Technology is a leading holding company specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy."}
+            {company?.heroDescription || "Lamplight Technology specializes in cutting-edge SaaS platforms that transform how customers and businesses operate, scale, and succeed in the digital economy."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 

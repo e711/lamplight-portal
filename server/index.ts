@@ -4,27 +4,27 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-app.set('env', 'development'); // Force development mode for testing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-const getBaseURL = () => {
-  // Check for custom domain first
+const getBaseURL = (): string => {
+  // Check for custom domain first (production with custom domain)
   if (process.env.CUSTOM_DOMAIN) {
     return `https://${process.env.CUSTOM_DOMAIN}`;
   }
   
-  // Check for Replit dev domain
+  // Check for Replit dev domain (Replit development)
   if (process.env.REPLIT_DEV_DOMAIN) {
     return `https://${process.env.REPLIT_DEV_DOMAIN}`;
   }
   
-  // For production, return a function that dynamically determines baseURL
-  return (req: any) => {
-    const host = req.get('host') || req.get('x-forwarded-host');
-    const protocol = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
-    return host ? `${protocol}://${host}` : 'http://localhost:5000';
-  };
+  // Check if we're in production mode on Replit
+  if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+    return `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+  }
+  
+  // Fallback for local development
+  return 'http://localhost:5000';
 };
 
 // Only use auth if all required environment variables are present
@@ -35,7 +35,7 @@ if (process.env.AUTH0_SECRET && process.env.AUTH0_CLIENT_ID && process.env.AUTH0
     auth0Logout: true,
     idpLogout: true,
     secret: process.env.AUTH0_SECRET,
-    baseURL: typeof baseURL === 'string' ? baseURL : 'http://localhost:5000',
+    baseURL,
     clientID: process.env.AUTH0_CLIENT_ID,
     issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
     routes: {
@@ -113,9 +113,9 @@ app.use((req, res, next) => {
 
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // Bind to 0.0.0.0 to work in all environments (Replit, Docker, cloud hosting, local)
   const port = 5000;
-  server.listen(port, "localhost", () => {
-    log(`serving on http://localhost:${port}`);
+  server.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
   });
 })();
