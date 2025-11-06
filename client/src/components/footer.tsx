@@ -40,9 +40,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="text-slate-400 text-sm mb-4 md:mb-0">
-            © 2024 Lamplight Technology. All rights reserved.
-          </div>
+          <div className="text-slate-400 text-sm mb-4 md:mb-0">© 2025 Lamplight Technology. All rights reserved.</div>
           <div className="text-slate-400 text-sm">
             Website designed and developed by <span className="text-blue-400">Lamplight Software</span>
           </div>
