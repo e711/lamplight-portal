@@ -746,24 +746,60 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
             {activeSection === "settings" && (
               <div>
                 <h3 className="text-xl font-semibold text-lamplight-primary mb-6">System Settings</h3>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Site Title</label>
-                    <Input defaultValue={company?.siteTitle || "Lamplight Technology"} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Contact Email</label>
-                    <Input type="email" defaultValue={company?.contactEmail || "contact@lamplighttech.com"} />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="maintenance" defaultChecked={company?.maintenanceMode || false} />
-                    <label htmlFor="maintenance" className="text-sm text-slate-700">Maintenance Mode</label>
-                  </div>
-                  <Button className="bg-lamplight-accent hover:bg-blue-600 text-white">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Settings
-                  </Button>
-                </div>
+                <Form {...companyForm}>
+                  <form onSubmit={companyForm.handleSubmit(onCompanySubmit)} className="space-y-6">
+                    <FormField
+                      control={companyForm.control}
+                      name="siteTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Site Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="contactEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="maintenanceMode"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Switch 
+                              id="maintenance" 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel htmlFor="maintenance" className="!mt-0">Maintenance Mode</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      className="bg-lamplight-accent hover:bg-blue-600 text-white"
+                      disabled={updateCompanyMutation.isPending}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {updateCompanyMutation.isPending ? "Saving..." : "Save Settings"}
+                    </Button>
+                  </form>
+                </Form>
               </div>
             )}
           </div>
