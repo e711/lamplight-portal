@@ -43,6 +43,10 @@ type AdminSection = "company" | "platforms" | "legal" | "media" | "settings";
 
 const companyFormSchema = insertCompanySchema.extend({
   id: z.number().optional(),
+  logo: z.string().nullable().transform(val => val ?? ""),
+  contactEmail: z.string().nullable().transform(val => val ?? ""),
+  siteTitle: z.string().nullable().transform(val => val ?? ""),
+  maintenanceMode: z.boolean().nullable().transform(val => val ?? false),
 });
 
 const platformFormSchema = insertPlatformSchema;
@@ -65,15 +69,15 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
   const companyForm = useForm<z.infer<typeof companyFormSchema>>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
-      name: company?.name || "",
-      logo: company?.logo || "",
-      heroTitle: company?.heroTitle || "",
-      heroDescription: company?.heroDescription || "",
-      aboutTitle: company?.aboutTitle || "",
-      aboutDescription: company?.aboutDescription || "",
-      contactEmail: company?.contactEmail || "",
-      siteTitle: company?.siteTitle || "",
-      maintenanceMode: company?.maintenanceMode || false,
+      name: company?.name ?? "",
+      logo: company?.logo ?? "",
+      heroTitle: company?.heroTitle ?? "",
+      heroDescription: company?.heroDescription ?? "",
+      aboutTitle: company?.aboutTitle ?? "",
+      aboutDescription: company?.aboutDescription ?? "",
+      contactEmail: company?.contactEmail ?? "",
+      siteTitle: company?.siteTitle ?? "",
+      maintenanceMode: company?.maintenanceMode ?? false,
     },
   });
 

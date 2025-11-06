@@ -309,15 +309,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
 
-      let response;
+      let currentUrl = url;
+      let redirectCount = 0;
+      const maxRedirects = 5;
+      let finalResponse: Response;
+
       try {
-        response = await fetch(url, {
-          signal: controller.signal,
-          headers: {
-            'User-Agent': 'LamplightTechnology-Bot/1.0'
-          },
-          redirect: 'manual'
-        });
+        while (redirectCount < maxRedirects) {
+          const response = await fetch(currentUrl, {
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'LamplightTechnology-Bot/1.0'
+            },
+            redirect: 'manual'
+          });
+
+          if (response.status >= 300 && response.status < 400) {
+            const location = response.headers.get('location');
+            if (!location) {
+              clearTimeout(timeout);
+              return res.status(400).json({ message: "Redirect without location header" });
+            }
+
+            let redirectUrl;
+            try {
+              redirectUrl = new URL(location, currentUrl);
+            } catch {
+              clearTimeout(timeout);
+              return res.status(400).json({ message: "Invalid redirect URL" });
+            }
+
+            if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
+              clearTimeout(timeout);
+              return res.status(400).json({ message: "Redirect to non-HTTP(S) protocol not allowed" });
+            }
+
+            const redirectHostname = redirectUrl.hostname;
+            if (redirectHostname === 'localhost' || redirectHostname.endsWith('.local') || isPrivateOrLocalIP(redirectHostname)) {
+              clearTimeout(timeout);
+              return res.status(400).json({ message: "Redirect to private or local address not allowed" });
+            }
+
+            let redirectAddresses: string[] = [];
+            try {
+              const result = await dns.resolve(redirectHostname);
+              redirectAddresses = result;
+            } catch {
+              try {
+                const result = await dns.resolve4(redirectHostname);
+                redirectAddresses = result;
+              } catch {
+                clearTimeout(timeout);
+                return res.status(400).json({ message: "Unable to resolve redirect hostname" });
+              }
+            }
+
+            for (const addr of redirectAddresses) {
+              if (isPrivateOrLocalIP(addr)) {
+                clearTimeout(timeout);
+                return res.status(400).json({ message: "Redirect URL resolves to private or local IP" });
+              }
+            }
+
+            currentUrl = redirectUrl.toString();
+            redirectCount++;
+            continue;
+          }
+
+          finalResponse = response;
+          break;
+        }
+
+        if (redirectCount >= maxRedirects) {
+          clearTimeout(timeout);
+          return res.status(400).json({ message: "Too many redirects" });
+        }
+
+        if (!finalResponse!.ok) {
+          clearTimeout(timeout);
+          return res.status(400).json({ message: `Failed to fetch URL (HTTP ${finalResponse!.status})` });
+        }
       } catch (fetchError: any) {
         clearTimeout(timeout);
         if (fetchError.name === 'AbortError') {
@@ -328,20 +399,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clearTimeout(timeout);
       }
 
-      if (response.status >= 300 && response.status < 400) {
-        return res.status(400).json({ message: "Redirects are not allowed for security reasons" });
-      }
-
-      if (!response.ok) {
-        return res.status(400).json({ message: `Failed to fetch URL (HTTP ${response.status})` });
-      }
-
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = finalResponse!.headers.get('content-type') || '';
       if (!contentType.includes('text/html')) {
         return res.status(400).json({ message: "URL must point to an HTML page" });
       }
 
-      const html = await response.text();
+      const html = await finalResponse!.text();
       const $ = cheerio.load(html);
       
       $('script').remove();
