@@ -102,7 +102,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-lamplight-primary mb-4">Our SaaS Platforms</h2>
-              <p className="text-lg text-slate-600">Discover our comprehensive suite of business software solutions</p>
+              <p className="text-lg text-slate-600">Discover our platforms and services</p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
