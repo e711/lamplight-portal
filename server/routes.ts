@@ -297,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const addr of resolvedAddresses) {
         if (isPrivateOrLocalIP(addr)) {
-          return res.status(400).json({ message: "URL resolves to a private or local IP address" });
+          return res.status(400).json({ message: `URL resolves to a private or local IP address: ${addr}` });
         }
       }
 
@@ -374,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             for (const addr of redirectAddresses) {
               if (isPrivateOrLocalIP(addr)) {
                 clearTimeout(timeout);
-                return res.status(400).json({ message: "Redirect URL resolves to private or local IP" });
+                return res.status(400).json({ message: `Redirect URL resolves to private or local IP: ${addr}` });
               }
             }
 
