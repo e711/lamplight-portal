@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -52,3 +52,20 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export const legalDocuments = pgTable("legal_documents", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'privacy', 'terms', 'cookies', 'support'
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  isActive: boolean("is_active").default(true),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertLegalDocumentSchema = createInsertSchema(legalDocuments).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+export type InsertLegalDocument = z.infer<typeof insertLegalDocumentSchema>;
+export type LegalDocument = typeof legalDocuments.$inferSelect;

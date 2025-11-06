@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,23 +13,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { 
-  X, 
-  Building, 
-  Grid3X3, 
-  Images, 
-  Settings, 
-  Save, 
-  Plus, 
-  Edit, 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  X,
+  Building,
+  Grid3X3,
+  Images,
+  Settings,
+  Save,
+  Plus,
+  Edit,
   Trash2,
   ProjectorIcon,
   Link as LinkIcon,
   Loader2,
-  Sparkles
+  Sparkles,
+  FileText
 } from "lucide-react";
-import type { Company, Platform } from "@shared/schema";
-import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
+import type { Company, Platform, LegalDocument } from "@shared/schema";
+import { insertCompanySchema, insertPlatformSchema, insertLegalDocumentSchema } from "@shared/schema";
 
 interface AdminPanelProps {
   company?: Company;
@@ -37,18 +39,21 @@ interface AdminPanelProps {
   onClose: () => void;
 }
 
-type AdminSection = "company" | "platforms" | "media" | "settings";
+type AdminSection = "company" | "platforms" | "legal" | "media" | "settings";
 
 const companyFormSchema = insertCompanySchema.extend({
   id: z.number().optional(),
 });
 
 const platformFormSchema = insertPlatformSchema;
+const legalDocumentFormSchema = insertLegalDocumentSchema;
 
 export default function AdminPanel({ company, platforms, onClose }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>("company");
   const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
+  const [editingDocument, setEditingDocument] = useState<LegalDocument | null>(null);
   const [showPlatformForm, setShowPlatformForm] = useState(false);
+  const [showDocumentForm, setShowDocumentForm] = useState(false);
   const [showUrlImport, setShowUrlImport] = useState(false);
   const [importUrl, setImportUrl] = useState("");
   const [logoPreviewError, setLogoPreviewError] = useState(false);
@@ -84,6 +89,22 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       isActive: true,
       sortOrder: 0,
     },
+  });
+
+  // Legal document form
+  const documentForm = useForm<z.infer<typeof legalDocumentFormSchema>>({
+    resolver: zodResolver(legalDocumentFormSchema),
+    defaultValues: {
+      type: "",
+      title: "",
+      content: "",
+      isActive: true,
+    },
+  });
+
+  // Fetch legal documents
+  const { data: legalDocuments = [], isLoading: documentsLoading } = useQuery<LegalDocument[]>({
+    queryKey: ["/api/legal-documents"],
   });
 
   // Update company mutation
@@ -212,6 +233,77 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     },
   });
 
+  // Create legal document mutation
+  const createDocumentMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof legalDocumentFormSchema>) => {
+      const response = await apiRequest("POST", "/api/legal-documents", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legal-documents"] });
+      toast({
+        title: "Success",
+        description: "Legal document created successfully",
+      });
+      setShowDocumentForm(false);
+      documentForm.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create legal document",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update legal document mutation
+  const updateDocumentMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof legalDocumentFormSchema> }) => {
+      const response = await apiRequest("PUT", `/api/legal-documents/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legal-documents"] });
+      toast({
+        title: "Success",
+        description: "Legal document updated successfully",
+      });
+      setEditingDocument(null);
+      documentForm.reset();
+      setShowDocumentForm(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update legal document",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete legal document mutation
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/legal-documents/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/legal-documents"] });
+      toast({
+        title: "Success",
+        description: "Legal document deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete legal document",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onCompanySubmit = (data: z.infer<typeof companyFormSchema>) => {
     updateCompanyMutation.mutate(data);
   };
@@ -221,6 +313,14 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       updatePlatformMutation.mutate({ id: editingPlatform.id, data });
     } else {
       createPlatformMutation.mutate(data);
+    }
+  };
+
+  const onDocumentSubmit = (data: z.infer<typeof legalDocumentFormSchema>) => {
+    if (editingDocument) {
+      updateDocumentMutation.mutate({ id: editingDocument.id, data });
+    } else {
+      createDocumentMutation.mutate(data);
     }
   };
 
@@ -268,9 +368,32 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     extractFromUrlMutation.mutate(importUrl);
   };
 
+  const handleEditDocument = (document: LegalDocument) => {
+    setEditingDocument(document);
+    documentForm.reset({
+      type: document.type,
+      title: document.title,
+      content: document.content,
+      isActive: document.isActive,
+    });
+    setShowDocumentForm(true);
+  };
+
+  const handleAddDocument = () => {
+    setEditingDocument(null);
+    documentForm.reset({
+      type: "",
+      title: "",
+      content: "",
+      isActive: true,
+    });
+    setShowDocumentForm(true);
+  };
+
   const navItems = [
     { id: "company" as AdminSection, label: "Company Info", icon: Building },
     { id: "platforms" as AdminSection, label: "Manage Platforms", icon: Grid3X3 },
+    { id: "legal" as AdminSection, label: "Legal Documents", icon: FileText },
     { id: "media" as AdminSection, label: "Media Library", icon: Images },
     { id: "settings" as AdminSection, label: "Settings", icon: Settings },
   ];
@@ -525,6 +648,79 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {activeSection === "legal" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-lamplight-primary">Legal Documents</h3>
+                  <Button
+                    onClick={handleAddDocument}
+                    className="bg-lamplight-success hover:bg-emerald-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Document
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {documentsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lamplight-accent mx-auto"></div>
+                      <p className="text-slate-600 mt-2">Loading documents...</p>
+                    </div>
+                  ) : legalDocuments.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-600">No legal documents found</p>
+                    </div>
+                  ) : (
+                    legalDocuments.map((document) => (
+                      <Card key={document.id} className="bg-slate-50 border border-slate-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <FileText className="h-6 w-6 text-lamplight-accent" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-lamplight-primary">{document.title}</h4>
+                                <p className="text-sm text-slate-600 capitalize">{document.type}</p>
+                                <Badge variant={document.isActive ? "default" : "secondary"}>
+                                  {document.isActive ? "Active" : "Inactive"}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(`/legal/${document.type}`, '_blank')}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditDocument(document)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteDocumentMutation.mutate(document.id)}
+                                disabled={deleteDocumentMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -839,6 +1035,105 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Legal Document Form Dialog */}
+      <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingDocument ? "Edit Legal Document" : "Add Legal Document"}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...documentForm}>
+            <form onSubmit={documentForm.handleSubmit(onDocumentSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={documentForm.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Document Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="privacy">Privacy Policy</SelectItem>
+                          <SelectItem value="terms">Terms of Service</SelectItem>
+                          <SelectItem value="cookies">Cookie Policy</SelectItem>
+                          <SelectItem value="support">Support Policy</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={documentForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Document Title</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={documentForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Document Content</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={20} className="font-mono text-sm" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={documentForm.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Active</FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowDocumentForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-lamplight-accent hover:bg-blue-600 text-white"
+                  disabled={createDocumentMutation.isPending || updateDocumentMutation.isPending}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {editingDocument ? "Update" : "Create"} Document
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

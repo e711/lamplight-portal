@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCompanySchema, insertPlatformSchema } from "@shared/schema";
+import { insertCompanySchema, insertPlatformSchema, insertLegalDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
 import * as cheerio from "cheerio";
@@ -411,6 +411,78 @@ Be concise and professional.`
     } catch (error) {
       console.error("Extract from URL error:", error);
       res.status(500).json({ message: "Failed to extract data from URL" });
+    }
+  });
+
+  // Legal documents routes
+  app.get("/api/legal-documents", async (req, res) => {
+    try {
+      const documents = await storage.getAllLegalDocuments();
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch legal documents" });
+    }
+  });
+
+  app.get("/api/legal-documents/:type", async (req, res) => {
+    try {
+      const type = req.params.type;
+      const document = await storage.getLegalDocument(type);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch document" });
+    }
+  });
+
+  app.post("/api/legal-documents", requiresAuth(), async (req, res) => {
+    try {
+      const documentData = insertLegalDocumentSchema.parse(req.body);
+      const newDocument = await storage.createLegalDocument(documentData);
+      res.status(201).json(newDocument);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create document" });
+    }
+  });
+
+  app.put("/api/legal-documents/:id", requiresAuth(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = insertLegalDocumentSchema.partial().parse(req.body);
+      
+      const updatedDocument = await storage.updateLegalDocument(id, updateData);
+      if (!updatedDocument) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(updatedDocument);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.delete("/api/legal-documents/:id", requiresAuth(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteLegalDocument(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json({ message: "Document deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete document" });
     }
   });
 
