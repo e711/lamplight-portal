@@ -312,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let currentUrl = url;
       let redirectCount = 0;
       const maxRedirects = 5;
-      let finalResponse: Response;
+      let fetchResponse: globalThis.Response;
 
       try {
         while (redirectCount < maxRedirects) {
@@ -350,6 +350,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return res.status(400).json({ message: "Redirect to private or local address not allowed" });
             }
 
+            if (redirectUrl.hostname === 'replit.com' && redirectUrl.pathname.includes('__replshield')) {
+              clearTimeout(timeout);
+              return res.status(400).json({ 
+                message: "This site is protected by Replit's anti-abuse shield. Please try accessing it directly in a browser first, or use a different URL." 
+              });
+            }
+
             let redirectAddresses: string[] = [];
             try {
               const result = await dns.resolve(redirectHostname);
@@ -376,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
 
-          finalResponse = response;
+          fetchResponse = response;
           break;
         }
 
@@ -385,9 +392,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Too many redirects" });
         }
 
-        if (!finalResponse!.ok) {
+        if (!fetchResponse!.ok) {
           clearTimeout(timeout);
-          return res.status(400).json({ message: `Failed to fetch URL (HTTP ${finalResponse!.status})` });
+          return res.status(400).json({ message: `Failed to fetch URL (HTTP ${fetchResponse!.status})` });
         }
       } catch (fetchError: any) {
         clearTimeout(timeout);
@@ -399,12 +406,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clearTimeout(timeout);
       }
 
-      const contentType = finalResponse!.headers.get('content-type') || '';
+      const contentType = fetchResponse!.headers.get('content-type') || '';
       if (!contentType.includes('text/html')) {
         return res.status(400).json({ message: "URL must point to an HTML page" });
       }
 
-      const html = await finalResponse!.text();
+      const html = await fetchResponse!.text();
       const $ = cheerio.load(html);
       
       $('script').remove();
