@@ -1,17 +1,31 @@
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail } from "lucide-react";
+import type { Company } from "@shared/schema";
 
-export default function Footer() {
+interface FooterProps {
+  company?: Company;
+}
+
+export default function Footer({ company }: FooterProps) {
+  const defaultBlurb = "Specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.";
+  const defaultEmail = "info@example.com";
+
   return (
     <footer className="bg-slate-900 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="col-span-2">
-            <h3 className="text-xl font-bold mb-4 text-blue-400">Lamplight Technology</h3>
-            <p className="text-slate-300 mb-4">Specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.</p>
+            <h3 className="text-xl font-bold mb-4 text-blue-400">{company?.name || "Lamplight Technology"}</h3>
+            <p className="text-slate-300 mb-4">{company?.footerBlurb || defaultBlurb}</p>
             <div className="flex items-center gap-2 text-slate-300 mb-2">
               <Mail className="h-4 w-4" />
-              <span>info@llt.llc</span>
+              <a 
+                href={`mailto:${company?.contactEmail || defaultEmail}`}
+                className="hover:text-blue-400 transition-colors"
+                data-testid="link-footer-email"
+              >
+                {company?.contactEmail || defaultEmail}
+              </a>
             </div>
           </div>
 

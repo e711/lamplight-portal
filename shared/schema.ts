@@ -13,6 +13,7 @@ export const companies = pgTable("companies", {
   contactEmail: text("contact_email"),
   siteTitle: text("site_title"),
   maintenanceMode: boolean("maintenance_mode").default(false),
+  footerBlurb: text("footer_blurb"),
 });
 
 export const platforms = pgTable("platforms", {

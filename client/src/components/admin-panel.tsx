@@ -47,6 +47,7 @@ const companyFormSchema = insertCompanySchema.extend({
   contactEmail: z.string().nullable().transform(val => val ?? ""),
   siteTitle: z.string().nullable().transform(val => val ?? ""),
   maintenanceMode: z.boolean().nullable().transform(val => val ?? false),
+  footerBlurb: z.string().nullable().transform(val => val ?? ""),
 });
 
 const platformFormSchema = insertPlatformSchema;
@@ -78,6 +79,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       contactEmail: company?.contactEmail ?? "",
       siteTitle: company?.siteTitle ?? "",
       maintenanceMode: company?.maintenanceMode ?? false,
+      footerBlurb: company?.footerBlurb ?? "",
     },
   });
 
@@ -578,10 +580,24 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={companyForm.control}
+                      name="footerBlurb"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Footer Blurb</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} rows={3} placeholder="Company description shown in footer" value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <Button 
                       type="submit" 
                       className="bg-lamplight-accent hover:bg-blue-600 text-white"
                       disabled={updateCompanyMutation.isPending}
+                      data-testid="button-save-company"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       {updateCompanyMutation.isPending ? "Saving..." : "Save Changes"}

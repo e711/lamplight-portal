@@ -120,11 +120,14 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-lamplight-primary mb-4">Get in Touch</h2>
               <p className="text-lg text-slate-600 mb-8">Ready to transform your business with our SaaS platforms?</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button className="bg-lamplight-accent hover:bg-blue-600 text-white px-8 py-3">
-                  Contact Sales
-                </Button>
-                <Button variant="outline" className="border-lamplight-accent text-lamplight-accent hover:bg-lamplight-accent hover:text-white px-8 py-3">
-                  Schedule Demo
+                <Button 
+                  className="bg-lamplight-accent hover:bg-blue-600 text-white px-8 py-3"
+                  asChild
+                  data-testid="button-contact-us"
+                >
+                  <a href={`mailto:${company?.contactEmail || 'info@example.com'}`}>
+                    Contact Us
+                  </a>
                 </Button>
               </div>
             </div>
@@ -132,7 +135,7 @@ export default function Home() {
         </section>
       </main>
 
-      <Footer />
+      <Footer company={company} />
 
       {showAdmin && isAuthenticated && (
         <AdminPanel 
