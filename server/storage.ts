@@ -80,6 +80,9 @@ export class MemStorage implements IStorage {
       siteTitle: "Lamplight Technology",
       maintenanceMode: false,
       footerBlurb: "Specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.",
+      showPlatforms: true,
+      showAbout: true,
+      showContact: true,
     };
     this.companies.set(1, defaultCompany);
     this.currentCompanyId = 2;
@@ -496,6 +499,9 @@ This Support Policy may be updated to reflect changes in our services or support
       siteTitle: insertCompany.siteTitle ?? null,
       maintenanceMode: insertCompany.maintenanceMode ?? null,
       footerBlurb: insertCompany.footerBlurb ?? null,
+      showPlatforms: insertCompany.showPlatforms ?? null,
+      showAbout: insertCompany.showAbout ?? null,
+      showContact: insertCompany.showContact ?? null,
       id 
     };
     this.companies.set(id, company);

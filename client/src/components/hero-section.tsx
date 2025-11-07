@@ -42,23 +42,27 @@ export default function HeroSection({ company }: HeroSectionProps) {
             {company?.heroDescription || "Lamplight Technology specializes in cutting-edge SaaS platforms that transform how customers and businesses operate, scale, and succeed in the digital economy."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={scrollToPlatforms}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3"
-              size="lg"
-            >
-              <Rocket className="h-5 w-5 mr-2" />
-              Explore Our Platforms
-            </Button>
-            <Button 
-              onClick={scrollToAbout}
-              variant="outline" 
-              className="border-blue-300 text-blue-100 hover:bg-blue-500 hover:text-white px-8 py-3"
-              size="lg"
-            >
-              <Info className="h-5 w-5 mr-2" />
-              Learn More
-            </Button>
+            {company?.showPlatforms !== false && (
+              <Button 
+                onClick={scrollToPlatforms}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3"
+                size="lg"
+              >
+                <Rocket className="h-5 w-5 mr-2" />
+                Explore Our Platforms
+              </Button>
+            )}
+            {company?.showAbout !== false && (
+              <Button 
+                onClick={scrollToAbout}
+                variant="outline" 
+                className="border-blue-300 text-blue-100 hover:bg-blue-500 hover:text-white px-8 py-3"
+                size="lg"
+              >
+                <Info className="h-5 w-5 mr-2" />
+                Learn More
+              </Button>
+            )}
           </div>
         </div>
       </div>

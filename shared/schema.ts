@@ -14,6 +14,9 @@ export const companies = pgTable("companies", {
   siteTitle: text("site_title"),
   maintenanceMode: boolean("maintenance_mode").default(false),
   footerBlurb: text("footer_blurb"),
+  showPlatforms: boolean("show_platforms").default(true),
+  showAbout: boolean("show_about").default(true),
+  showContact: boolean("show_contact").default(true),
 });
 
 export const platforms = pgTable("platforms", {

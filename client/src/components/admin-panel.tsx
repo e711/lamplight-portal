@@ -49,6 +49,9 @@ const companyFormSchema = insertCompanySchema.extend({
   siteTitle: z.string().nullable().transform(val => val ?? ""),
   maintenanceMode: z.boolean().nullable().transform(val => val ?? false),
   footerBlurb: z.string().nullable().transform(val => val ?? ""),
+  showPlatforms: z.boolean().nullable().transform(val => val ?? true),
+  showAbout: z.boolean().nullable().transform(val => val ?? true),
+  showContact: z.boolean().nullable().transform(val => val ?? true),
 });
 
 const platformFormSchema = insertPlatformSchema;
@@ -93,6 +96,9 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       siteTitle: company?.siteTitle ?? "",
       maintenanceMode: company?.maintenanceMode ?? false,
       footerBlurb: company?.footerBlurb ?? "",
+      showPlatforms: company?.showPlatforms ?? true,
+      showAbout: company?.showAbout ?? true,
+      showContact: company?.showContact ?? true,
     },
   });
 
@@ -648,6 +654,74 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                         </FormItem>
                       )}
                     />
+                    
+                    <div className="border-t pt-6 mt-6">
+                      <h4 className="text-lg font-semibold text-lamplight-primary mb-4">Section Visibility</h4>
+                      <p className="text-sm text-slate-600 mb-4">Control which sections appear on your website. Disabled sections will be hidden from navigation, the page, and the footer.</p>
+                      
+                      <div className="space-y-4">
+                        <FormField
+                          control={companyForm.control}
+                          name="showPlatforms"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                              <div>
+                                <FormLabel className="text-base font-medium">Show Platforms Section</FormLabel>
+                                <p className="text-sm text-slate-600">Display the platforms showcase and related navigation links</p>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value || false}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="switch-show-platforms"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={companyForm.control}
+                          name="showAbout"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                              <div>
+                                <FormLabel className="text-base font-medium">Show About Section</FormLabel>
+                                <p className="text-sm text-slate-600">Display the about section and related navigation links</p>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value || false}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="switch-show-about"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={companyForm.control}
+                          name="showContact"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                              <div>
+                                <FormLabel className="text-base font-medium">Show Contact Section</FormLabel>
+                                <p className="text-sm text-slate-600">Display the contact section and related navigation links</p>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value || false}
+                                  onCheckedChange={field.onChange}
+                                  data-testid="switch-show-contact"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    
                     <Button 
                       type="submit" 
                       className="bg-lamplight-accent hover:bg-blue-600 text-white"

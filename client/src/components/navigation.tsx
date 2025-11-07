@@ -67,24 +67,30 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
               >
                 Home
               </button>
-              <button 
-                onClick={() => scrollToSection('platforms')}
-                className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Platforms
-              </button>
-              <button 
-                onClick={() => scrollToSection('about')}
-                className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
-              >
-                About
-              </button>
-              <button 
-                onClick={() => scrollToSection('contact')}
-                className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Contact
-              </button>
+              {company?.showPlatforms !== false && (
+                <button 
+                  onClick={() => scrollToSection('platforms')}
+                  className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
+                >
+                  Platforms
+                </button>
+              )}
+              {company?.showAbout !== false && (
+                <button 
+                  onClick={() => scrollToSection('about')}
+                  className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
+                >
+                  About
+                </button>
+              )}
+              {company?.showContact !== false && (
+                <button 
+                  onClick={() => scrollToSection('contact')}
+                  className="text-slate-500 hover:text-lamplight-accent px-3 py-2 text-sm font-medium transition-colors"
+                >
+                  Contact
+                </button>
+              )}
               {isAuthenticated ? (
                 <>
                   <Button 
@@ -141,24 +147,30 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
               >
                 Home
               </button>
-              <button 
-                onClick={() => scrollToSection('platforms')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
-              >
-                Platforms
-              </button>
-              <button 
-                onClick={() => scrollToSection('about')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
-              >
-                About
-              </button>
-              <button 
-                onClick={() => scrollToSection('contact')}
-                className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
-              >
-                Contact
-              </button>
+              {company?.showPlatforms !== false && (
+                <button 
+                  onClick={() => scrollToSection('platforms')}
+                  className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
+                >
+                  Platforms
+                </button>
+              )}
+              {company?.showAbout !== false && (
+                <button 
+                  onClick={() => scrollToSection('about')}
+                  className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
+                >
+                  About
+                </button>
+              )}
+              {company?.showContact !== false && (
+                <button 
+                  onClick={() => scrollToSection('contact')}
+                  className="text-left px-3 py-2 text-sm font-medium text-slate-600 hover:text-lamplight-accent"
+                >
+                  Contact
+                </button>
+              )}
               {isAuthenticated ? (
                 <>
                   <Button 

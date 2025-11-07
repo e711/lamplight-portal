@@ -59,6 +59,8 @@ export default function Home() {
       <main>
         <HeroSection company={company} />
         
+        {company?.showAbout !== false && (
+        <>
         {/* Company Overview */}
         <section id="about" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -96,7 +98,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </>
+        )}
 
+        {company?.showPlatforms !== false && (
+        <>
         {/* Platform Showcase */}
         <section id="platforms" className="py-16 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,7 +118,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </>
+        )}
 
+        {company?.showContact !== false && (
+        <>
         {/* Contact Section */}
         <section id="contact" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -133,6 +143,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </>
+        )}
       </main>
 
       <Footer company={company} />
