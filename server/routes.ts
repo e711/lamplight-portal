@@ -167,7 +167,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Platform routes
   app.get("/api/platforms", async (req, res) => {
     try {
-      const platforms = await storage.getAllPlatforms();
+      const includeInactive = req.query.includeInactive === 'true';
+      const platforms = await storage.getAllPlatforms(includeInactive);
       res.json(platforms);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch platforms" });

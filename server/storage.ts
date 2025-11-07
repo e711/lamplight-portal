@@ -28,7 +28,7 @@ export interface IStorage {
   updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined>;
   
   // Platform methods
-  getAllPlatforms(): Promise<Platform[]>;
+  getAllPlatforms(includeInactive?: boolean): Promise<Platform[]>;
   getPlatform(id: number): Promise<Platform | undefined>;
   createPlatform(platform: InsertPlatform): Promise<Platform>;
   updatePlatform(id: number, platform: Partial<InsertPlatform>): Promise<Platform | undefined>;
@@ -79,6 +79,7 @@ export class MemStorage implements IStorage {
       contactEmail: "contact@lamplighttech.com",
       siteTitle: "Lamplight Technology",
       maintenanceMode: false,
+      footerBlurb: "Specializing in cutting-edge SaaS platforms that transform how businesses operate, scale, and succeed in the digital economy.",
     };
     this.companies.set(1, defaultCompany);
     this.currentCompanyId = 2;
@@ -494,6 +495,7 @@ This Support Policy may be updated to reflect changes in our services or support
       contactEmail: insertCompany.contactEmail ?? null,
       siteTitle: insertCompany.siteTitle ?? null,
       maintenanceMode: insertCompany.maintenanceMode ?? null,
+      footerBlurb: insertCompany.footerBlurb ?? null,
       id 
     };
     this.companies.set(id, company);
@@ -515,9 +517,9 @@ This Support Policy may be updated to reflect changes in our services or support
   }
 
   // Platform methods
-  async getAllPlatforms(): Promise<Platform[]> {
+  async getAllPlatforms(includeInactive: boolean = false): Promise<Platform[]> {
     return Array.from(this.platforms.values())
-      .filter(platform => platform.isActive)
+      .filter(platform => includeInactive || platform.isActive)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
@@ -1017,12 +1019,14 @@ This Support Policy may be updated to reflect changes in our services or support
   }
 
   // Platform methods
-  async getAllPlatforms(): Promise<Platform[]> {
-    const result = await this.db
+  async getAllPlatforms(includeInactive: boolean = false): Promise<Platform[]> {
+    const query = this.db
       .select()
-      .from(platforms)
-      .where(eq(platforms.isActive, true))
-      .orderBy(platforms.sortOrder);
+      .from(platforms);
+    
+    const result = includeInactive 
+      ? await query.orderBy(platforms.sortOrder)
+      : await query.where(eq(platforms.isActive, true)).orderBy(platforms.sortOrder);
     return result;
   }
 

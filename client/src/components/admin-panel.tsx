@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,11 +61,23 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
   const [showPlatformForm, setShowPlatformForm] = useState(false);
   const [showDocumentForm, setShowDocumentForm] = useState(false);
   const [showUrlImport, setShowUrlImport] = useState(false);
+  const [showToggleConfirm, setShowToggleConfirm] = useState(false);
+  const [platformToToggle, setPlatformToToggle] = useState<Platform | null>(null);
   const [importUrl, setImportUrl] = useState("");
   const [logoPreviewError, setLogoPreviewError] = useState(false);
   const [generatingLogo, setGeneratingLogo] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch all platforms (including inactive) for admin view
+  const { data: adminPlatforms = [], isLoading: adminPlatformsLoading } = useQuery<Platform[]>({
+    queryKey: ["/api/platforms", { includeInactive: true }],
+    queryFn: async () => {
+      const response = await fetch("/api/platforms?includeInactive=true");
+      if (!response.ok) throw new Error("Failed to fetch platforms");
+      return response.json();
+    },
+  });
 
   // Company form
   const companyForm = useForm<z.infer<typeof companyFormSchema>>({
@@ -143,6 +156,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms", { includeInactive: true }] });
       toast({
         title: "Success",
         description: "Platform created successfully",
@@ -167,6 +181,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms", { includeInactive: true }] });
       toast({
         title: "Success",
         description: "Platform updated successfully",
@@ -191,6 +206,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms", { includeInactive: true }] });
       toast({
         title: "Success",
         description: "Platform deleted successfully",
@@ -200,6 +216,31 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       toast({
         title: "Error",
         description: "Failed to delete platform",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Toggle platform active status mutation
+  const togglePlatformMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      const response = await apiRequest("PUT", `/api/platforms/${id}`, { isActive });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/platforms", { includeInactive: true }] });
+      toast({
+        title: "Success",
+        description: "Platform status updated successfully",
+      });
+      setShowToggleConfirm(false);
+      setPlatformToToggle(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update platform status",
         variant: "destructive",
       });
     },
@@ -220,7 +261,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
         link: data.link,
         logo: data.logo,
         isActive: data.isActive,
-        sortOrder: platforms.length + 1,
+        sortOrder: adminPlatforms.length + 1,
       });
       setShowUrlImport(false);
       setImportUrl("");
@@ -353,7 +394,7 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       link: "",
       logo: "",
       isActive: true,
-      sortOrder: platforms.length + 1,
+      sortOrder: adminPlatforms.length + 1,
     });
     setShowPlatformForm(true);
   };
@@ -394,6 +435,20 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
       isActive: true,
     });
     setShowDocumentForm(true);
+  };
+
+  const handleTogglePlatform = (platform: Platform) => {
+    setPlatformToToggle(platform);
+    setShowToggleConfirm(true);
+  };
+
+  const confirmTogglePlatform = () => {
+    if (platformToToggle) {
+      togglePlatformMutation.mutate({
+        id: platformToToggle.id,
+        isActive: !platformToToggle.isActive,
+      });
+    }
   };
 
   const navItems = [
@@ -631,43 +686,63 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {platforms.map((platform) => (
-                    <Card key={platform.id} className="bg-slate-50 border border-slate-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <ProjectorIcon className="h-6 w-6 text-lamplight-accent" />
+                  {adminPlatformsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lamplight-accent mx-auto"></div>
+                      <p className="text-slate-600 mt-2">Loading platforms...</p>
+                    </div>
+                  ) : (
+                    adminPlatforms.map((platform) => (
+                      <Card key={platform.id} className="bg-slate-50 border border-slate-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <ProjectorIcon className="h-6 w-6 text-lamplight-accent" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-lamplight-primary">{platform.name}</h4>
+                                <p className="text-sm text-slate-600">{platform.category}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant={platform.isActive ? "default" : "secondary"}>
+                                    {platform.isActive ? "Active" : "Inactive"}
+                                  </Badge>
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={platform.isActive ?? false}
+                                      onCheckedChange={() => handleTogglePlatform(platform)}
+                                      disabled={togglePlatformMutation.isPending}
+                                      data-testid={`switch-platform-${platform.id}`}
+                                    />
+                                    <span className="text-xs text-slate-500">
+                                      {platform.isActive ? "Enabled" : "Disabled"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-lamplight-primary">{platform.name}</h4>
-                              <p className="text-sm text-slate-600">{platform.category}</p>
-                              <Badge variant={platform.isActive ? "default" : "secondary"}>
-                                {platform.isActive ? "Active" : "Inactive"}
-                              </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleEditPlatform(platform)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => deletePlatformMutation.mutate(platform.id)}
+                                disabled={deletePlatformMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleEditPlatform(platform)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => deletePlatformMutation.mutate(platform.id)}
-                              disabled={deletePlatformMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -1192,6 +1267,30 @@ export default function AdminPanel({ company, platforms, onClose }: AdminPanelPr
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Toggle Platform Confirmation */}
+      <AlertDialog open={showToggleConfirm} onOpenChange={setShowToggleConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to {platformToToggle?.isActive ? "disable" : "enable"} "{platformToToggle?.name}"?
+              {platformToToggle?.isActive 
+                ? " This platform will be hidden from the public website." 
+                : " This platform will be visible on the public website."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmTogglePlatform}
+              className="bg-lamplight-accent hover:bg-blue-600"
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
