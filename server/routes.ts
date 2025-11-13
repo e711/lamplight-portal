@@ -16,6 +16,43 @@ const requiresAuth = () => {
   };
 };
 
+const requiresAdmin = () => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.oidc?.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const user = req.oidc.user;
+    const email = user?.email;
+    const auth0Sub = user?.sub;
+
+    if (!email && !auth0Sub) {
+      return res.status(403).json({ message: "Admin access denied: no user identifier found" });
+    }
+
+    try {
+      let adminUser;
+      
+      if (email) {
+        adminUser = await storage.getAdminUserByEmail(email);
+      }
+      
+      if (!adminUser && auth0Sub) {
+        adminUser = await storage.getAdminUserByAuth0Sub(auth0Sub);
+      }
+
+      if (!adminUser) {
+        return res.status(403).json({ message: "Admin access denied" });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      return res.status(500).json({ message: "Error verifying admin access" });
+    }
+  };
+};
+
 const isPrivateOrLocalIP = (ip: string): boolean => {
   if (ip === 'localhost') return true;
   
@@ -132,6 +169,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if current user is an admin
+  app.get("/api/user/is-admin", async (req: Request, res: Response) => {
+    if (!req.oidc?.isAuthenticated()) {
+      return res.json({ isAdmin: false });
+    }
+
+    const user = req.oidc.user;
+    const email = user?.email;
+    const auth0Sub = user?.sub;
+
+    if (!email && !auth0Sub) {
+      return res.json({ isAdmin: false });
+    }
+
+    try {
+      let adminUser;
+      
+      if (email) {
+        adminUser = await storage.getAdminUserByEmail(email);
+      }
+      
+      if (!adminUser && auth0Sub) {
+        adminUser = await storage.getAdminUserByAuth0Sub(auth0Sub);
+      }
+
+      res.json({ isAdmin: !!adminUser });
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      res.status(500).json({ message: "Error checking admin status" });
+    }
+  });
+
+  // Admin user management routes
+  app.get("/api/admin-users", requiresAdmin(), async (req, res) => {
+    try {
+      const adminUsers = await storage.getAllAdminUsers();
+      res.json(adminUsers);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ message: "Failed to fetch admin users" });
+    }
+  });
+
+  app.post("/api/admin-users", requiresAdmin(), async (req, res) => {
+    try {
+      const { email, name, auth0Sub } = req.body;
+
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const existingAdmin = await storage.getAdminUserByEmail(email);
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Admin user with this email already exists" });
+      }
+
+      const newAdmin = await storage.createAdminUser({ email, name, auth0Sub });
+      res.status(201).json(newAdmin);
+    } catch (error) {
+      console.error("Error creating admin user:", error);
+      res.status(500).json({ message: "Failed to create admin user" });
+    }
+  });
+
   // Company routes (protected)
   app.get("/api/company", async (req, res) => {
     try {
@@ -145,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/company/:id", requiresAuth(), async (req, res) => {
+  app.put("/api/company/:id", requiresAdmin(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertCompanySchema.partial().parse(req.body);
@@ -190,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/platforms", requiresAuth(), async (req, res) => {
+  app.post("/api/platforms", requiresAdmin(), async (req, res) => {
     try {
       const platformData = insertPlatformSchema.parse(req.body);
       const newPlatform = await storage.createPlatform(platformData);
@@ -203,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/platforms/:id", requiresAuth(), async (req, res) => {
+  app.put("/api/platforms/:id", requiresAdmin(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertPlatformSchema.partial().parse(req.body);
@@ -222,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/platforms/:id", requiresAuth(), async (req, res) => {
+  app.delete("/api/platforms/:id", requiresAdmin(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deletePlatform(id);
@@ -237,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/platforms/generate-logo", requiresAuth(), async (req, res) => {
+  app.post("/api/platforms/generate-logo", requiresAdmin(), async (req, res) => {
     try {
       const { category, name } = req.body;
       
@@ -258,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/platforms/extract-from-url", requiresAuth(), async (req, res) => {
+  app.post("/api/platforms/extract-from-url", requiresAdmin(), async (req, res) => {
     try {
       const { url } = req.body;
       
@@ -510,7 +611,7 @@ Be concise and professional.`
     }
   });
 
-  app.post("/api/legal-documents", requiresAuth(), async (req, res) => {
+  app.post("/api/legal-documents", requiresAdmin(), async (req, res) => {
     try {
       const documentData = insertLegalDocumentSchema.parse(req.body);
       const newDocument = await storage.createLegalDocument(documentData);
@@ -523,7 +624,7 @@ Be concise and professional.`
     }
   });
 
-  app.put("/api/legal-documents/:id", requiresAuth(), async (req, res) => {
+  app.put("/api/legal-documents/:id", requiresAdmin(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertLegalDocumentSchema.partial().parse(req.body);
@@ -542,7 +643,7 @@ Be concise and professional.`
     }
   });
 
-  app.delete("/api/legal-documents/:id", requiresAuth(), async (req, res) => {
+  app.delete("/api/legal-documents/:id", requiresAdmin(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deleteLegalDocument(id);

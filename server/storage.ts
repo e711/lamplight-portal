@@ -1,15 +1,15 @@
 import {
   companies,
   platforms,
-  users,
+  adminUsers,
   legalDocuments,
   type Company,
   type Platform,
-  type User,
+  type AdminUser,
   type LegalDocument,
   type InsertCompany,
   type InsertPlatform,
-  type InsertUser,
+  type InsertAdminUser,
   type InsertLegalDocument
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -17,10 +17,11 @@ import { neon } from "@neondatabase/serverless";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  // User methods
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Admin user methods
+  getAdminUserByEmail(email: string): Promise<AdminUser | undefined>;
+  getAdminUserByAuth0Sub(auth0Sub: string): Promise<AdminUser | undefined>;
+  createAdminUser(user: InsertAdminUser): Promise<AdminUser>;
+  getAllAdminUsers(): Promise<AdminUser[]>;
   
   // Company methods
   getCompany(): Promise<Company | undefined>;
@@ -43,21 +44,21 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
+  private adminUsers: Map<number, AdminUser>;
   private companies: Map<number, Company>;
   private platforms: Map<number, Platform>;
   private legalDocuments: Map<number, LegalDocument>;
-  private currentUserId: number;
+  private currentAdminUserId: number;
   private currentCompanyId: number;
   private currentPlatformId: number;
   private currentLegalDocumentId: number;
 
   constructor() {
-    this.users = new Map();
+    this.adminUsers = new Map();
     this.companies = new Map();
     this.platforms = new Map();
     this.legalDocuments = new Map();
-    this.currentUserId = 1;
+    this.currentAdminUserId = 1;
     this.currentCompanyId = 1;
     this.currentPlatformId = 1;
     this.currentLegalDocumentId = 1;
@@ -468,21 +469,32 @@ This Support Policy may be updated to reflect changes in our services or support
   }
 
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+  // Admin user methods
+  async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> {
+    return Array.from(this.adminUsers.values()).find(
+      (user) => user.email === email,
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getAdminUserByAuth0Sub(auth0Sub: string): Promise<AdminUser | undefined> {
+    return Array.from(this.adminUsers.values()).find(
+      (user) => user.auth0Sub === auth0Sub,
+    );
+  }
+
+  async createAdminUser(insertAdminUser: InsertAdminUser): Promise<AdminUser> {
+    const id = this.currentAdminUserId++;
+    const adminUser: AdminUser = { 
+      ...insertAdminUser, 
+      id,
+      createdAt: new Date(),
+    };
+    this.adminUsers.set(id, adminUser);
+    return adminUser;
+  }
+
+  async getAllAdminUsers(): Promise<AdminUser[]> {
+    return Array.from(this.adminUsers.values());
   }
 
   // Company methods
@@ -989,19 +1001,24 @@ This Support Policy may be updated to reflect changes in our services or support
   }
 
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+  // Admin user methods
+  async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> {
+    const result = await this.db.select().from(adminUsers).where(eq(adminUsers.email, email)).limit(1);
     return result[0];
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.username, username)).limit(1);
+  async getAdminUserByAuth0Sub(auth0Sub: string): Promise<AdminUser | undefined> {
+    const result = await this.db.select().from(adminUsers).where(eq(adminUsers.auth0Sub, auth0Sub)).limit(1);
     return result[0];
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await this.db.insert(users).values(insertUser).returning();
+  async createAdminUser(insertAdminUser: InsertAdminUser): Promise<AdminUser> {
+    const result = await this.db.insert(adminUsers).values(insertAdminUser).returning();
     return result[0];
+  }
+
+  async getAllAdminUsers(): Promise<AdminUser[]> {
+    return await this.db.select().from(adminUsers);
   }
 
   // Company methods

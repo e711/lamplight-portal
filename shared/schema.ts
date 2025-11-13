@@ -43,19 +43,21 @@ export type Company = typeof companies.$inferSelect;
 export type InsertPlatform = z.infer<typeof insertPlatformSchema>;
 export type Platform = typeof platforms.$inferSelect;
 
-export const users = pgTable("users", {
+export const adminUsers = pgTable("admin_users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  auth0Sub: text("auth0_sub"),
+  name: text("name"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
 
 export const legalDocuments = pgTable("legal_documents", {
   id: serial("id").primaryKey(),

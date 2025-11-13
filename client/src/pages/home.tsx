@@ -26,7 +26,13 @@ export default function Home() {
     queryKey: ["/api/user"],
   });
 
+  const { data: adminData, isLoading: adminLoading } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/user/is-admin"],
+    enabled: authData?.user !== null && authData?.user !== undefined,
+  });
+
   const isAuthenticated = authData?.user !== null && authData?.user !== undefined;
+  const isAdmin = adminData?.isAdmin === true;
 
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -38,7 +44,7 @@ export default function Home() {
     }
   }, [isAuthenticated, showAdmin]);
 
-  if (companyLoading || platformsLoading || authLoading) {
+  if (companyLoading || platformsLoading || authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-lamplight-accent"></div>
@@ -47,14 +53,14 @@ export default function Home() {
   }
 
   const handleAdminClick = () => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isAdmin) {
       setShowAdmin(true);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navigation onAdminClick={handleAdminClick} company={company} isAuthenticated={isAuthenticated} />
+      <Navigation onAdminClick={handleAdminClick} company={company} isAuthenticated={isAuthenticated} isAdmin={isAdmin} />
       
       <main>
         <HeroSection company={company} />
@@ -185,7 +191,7 @@ export default function Home() {
 
       <Footer company={company} />
 
-      {showAdmin && isAuthenticated && (
+      {showAdmin && isAuthenticated && isAdmin && (
         <AdminPanel 
           company={company} 
           platforms={platforms} 
