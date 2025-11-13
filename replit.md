@@ -79,6 +79,15 @@ Preferred communication style: Simple, everyday language.
 - `GET /api/company` - View company information
 - `GET /api/platforms` - View active platforms
 
+**Environment-Aware Callback URLs**: The application automatically detects the correct base URL for Auth0 callbacks across different environments:
+1. **Custom Domain** (`CUSTOM_DOMAIN` env var) - Takes highest priority for production deployments with custom domains
+2. **Published Replit Apps** (`REPLIT_DOMAINS` env var) - Parses comma-separated domain list, preferring `.replit.app` domains for published apps
+3. **Replit Development** (`REPLIT_DEV_DOMAIN` env var) - Uses `.replit.dev` domain in Workspace/development
+4. **Legacy Replit** (`REPL_SLUG` + `REPL_OWNER` env vars) - Constructs `.repl.co` URL for older deployments
+5. **Local Development** - Falls back to `http://localhost:5000`
+
+This ensures Auth0 callback URLs work correctly whether running locally, in Replit Workspace, or published to production without manual configuration changes.
+
 ## External Dependencies
 
 **UI Components**: 

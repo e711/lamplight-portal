@@ -8,28 +8,46 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 const getBaseURL = (): string => {
-  // Check for custom domain first (production with custom domain)
+  // 1. Check for custom domain first (production with custom domain)
   if (process.env.CUSTOM_DOMAIN) {
     return `https://${process.env.CUSTOM_DOMAIN}`;
   }
   
-  // Check for Replit dev domain (Replit development)
+  // 2. Check for REPLIT_DOMAINS (published Replit apps)
+  if (process.env.REPLIT_DOMAINS) {
+    const domains = process.env.REPLIT_DOMAINS.split(',').map(d => d.trim()).filter(Boolean);
+    
+    // Prefer .replit.app domains (official published app domain)
+    const replitAppDomain = domains.find(d => d.endsWith('.replit.app'));
+    if (replitAppDomain) {
+      return `https://${replitAppDomain}`;
+    }
+    
+    // Fall back to first HTTPS-compatible domain
+    const firstDomain = domains[0];
+    if (firstDomain && firstDomain.includes('.')) {
+      return `https://${firstDomain}`;
+    }
+  }
+  
+  // 3. Check for Replit dev domain (Replit development/workspace)
   if (process.env.REPLIT_DEV_DOMAIN) {
     return `https://${process.env.REPLIT_DEV_DOMAIN}`;
   }
   
-  // Check if we're in production mode on Replit
+  // 4. Legacy: Check if we're in production mode on Replit (older deployments)
   if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
     return `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
   }
   
-  // Fallback for local development
+  // 5. Fallback for local development
   return 'http://localhost:5000';
 };
 
 // Only use auth if all required environment variables are present
 if (process.env.AUTH0_SECRET && process.env.AUTH0_CLIENT_ID && process.env.AUTH0_DOMAIN) {
   const baseURL = getBaseURL();
+  console.log(`Auth0 configured with baseURL: ${baseURL}`);
   const config = {
     authRequired: false,
     auth0Logout: true,
