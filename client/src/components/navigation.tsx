@@ -94,17 +94,15 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
               )}
               {isAuthenticated ? (
                 <>
-                  {isAdmin && (
-                    <Button 
-                      onClick={onAdminClick}
-                      className="bg-lamplight-accent text-white hover:bg-blue-600"
-                      size="sm"
-                      data-testid="button-admin"
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Admin
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={onAdminClick}
+                    className="bg-lamplight-accent text-white hover:bg-blue-600"
+                    size="sm"
+                    data-testid="button-admin"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
                   <Button 
                     onClick={handleLogout}
                     variant="outline"
@@ -176,17 +174,15 @@ export default function Navigation({ onAdminClick, company, isAuthenticated = fa
               )}
               {isAuthenticated ? (
                 <>
-                  {isAdmin && (
-                    <Button 
-                      onClick={onAdminClick}
-                      className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
-                      size="sm"
-                      data-testid="button-admin-mobile"
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Admin
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={onAdminClick}
+                    className="bg-lamplight-accent text-white hover:bg-blue-600 mx-3"
+                    size="sm"
+                    data-testid="button-admin-mobile"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
                   <Button 
                     onClick={handleLogout}
                     variant="outline"

@@ -1,43 +1,82 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import AdminPanel from "@/components/admin-panel";
+import AccessDenied from "@/components/access-denied";
+import type { Company, Platform } from "@shared/schema";
 
 export default function AdminPage() {
-  const { data: company } = useQuery({
+  const [, setLocation] = useLocation();
+
+  const { data: authData, isLoading: authLoading } = useQuery<{ user: any | null }>({
+    queryKey: ["/api/user"],
+  });
+
+  const { data: adminData, isLoading: adminLoading } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/user/is-admin"],
+    enabled: authData?.user !== null && authData?.user !== undefined,
+  });
+
+  const { data: company } = useQuery<Company>({
     queryKey: ["/api/company"],
-    queryFn: async () => {
-      const response = await fetch("/api/company");
-      if (!response.ok) {
-        throw new Error("Failed to fetch company data");
-      }
-      return response.json();
-    },
   });
 
-  const { data: platforms } = useQuery({
+  const { data: platforms = [] } = useQuery<Platform[]>({
     queryKey: ["/api/platforms"],
-    queryFn: async () => {
-      const response = await fetch("/api/platforms");
-      if (!response.ok) {
-        throw new Error("Failed to fetch platforms");
-      }
-      return response.json();
-    },
   });
 
-  if (!company || !platforms) {
+  const isAuthenticated = authData?.user !== null && authData?.user !== undefined;
+  const isAdmin = adminData?.isAdmin === true;
+
+  // Show loading state while checking auth and admin status
+  // CRITICAL: Must wait for adminLoading to complete to avoid showing AdminPanel to non-admins
+  if (authLoading || (isAuthenticated && adminLoading) || !company) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading admin panel...</div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-lamplight-accent"></div>
       </div>
     );
   }
 
+  // If not authenticated, show login prompt
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center max-w-md p-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">Authentication Required</h2>
+          <p className="text-slate-600 mb-6">You must be logged in to access the admin panel.</p>
+          <button
+            onClick={() => {
+              if (window.self !== window.top) {
+                window.open('/api/login', '_blank');
+              } else {
+                window.location.href = '/api/login';
+              }
+            }}
+            className="bg-lamplight-accent hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated but not admin, show access denied
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <AccessDenied onClose={() => setLocation('/')} />
+      </div>
+    );
+  }
+
+  // If authenticated and admin, show admin panel
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminPanel 
         company={company} 
         platforms={platforms} 
-        onClose={() => window.history.back()} 
+        onClose={() => setLocation('/')} 
       />
     </div>
   );

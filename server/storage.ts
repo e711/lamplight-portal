@@ -485,8 +485,10 @@ This Support Policy may be updated to reflect changes in our services or support
   async createAdminUser(insertAdminUser: InsertAdminUser): Promise<AdminUser> {
     const id = this.currentAdminUserId++;
     const adminUser: AdminUser = { 
-      ...insertAdminUser, 
       id,
+      email: insertAdminUser.email,
+      name: insertAdminUser.name ?? null,
+      auth0Sub: insertAdminUser.auth0Sub ?? null,
       createdAt: new Date(),
     };
     this.adminUsers.set(id, adminUser);

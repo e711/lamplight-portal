@@ -5,6 +5,7 @@ import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import PlatformCard from "@/components/platform-card";
 import AdminPanel from "@/components/admin-panel";
+import AccessDenied from "@/components/access-denied";
 import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,7 +54,7 @@ export default function Home() {
   }
 
   const handleAdminClick = () => {
-    if (isAuthenticated && isAdmin) {
+    if (isAuthenticated) {
       setShowAdmin(true);
     }
   };
@@ -191,12 +192,18 @@ export default function Home() {
 
       <Footer company={company} />
 
-      {showAdmin && isAuthenticated && isAdmin && (
-        <AdminPanel 
-          company={company} 
-          platforms={platforms} 
-          onClose={() => setShowAdmin(false)} 
-        />
+      {showAdmin && isAuthenticated && (
+        <>
+          {isAdmin ? (
+            <AdminPanel 
+              company={company} 
+              platforms={platforms} 
+              onClose={() => setShowAdmin(false)} 
+            />
+          ) : (
+            <AccessDenied onClose={() => setShowAdmin(false)} />
+          )}
+        </>
       )}
     </div>
   );
